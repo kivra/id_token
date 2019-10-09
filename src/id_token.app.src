@@ -5,7 +5,8 @@
   {mod, {id_token_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    hackney
    ]},
   {env,[]},
   {modules, []},
