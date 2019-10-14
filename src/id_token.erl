@@ -58,18 +58,16 @@ refresh_keys(Provider) ->
 %% @end
 %%--------------------------------------------------------------------
 init([]) ->
-  Providers = id_token_jwks:get_providers(),
-  State = lists:foldl(fun({Name, Uri}, Acc) ->
-                          Acc#{ Name => #{ exp_at => 0
-                                         , keys => []
-                                         , well_known_uri => Uri
-                                         }}
-                      end, #{}, Providers),
   ets:new(?ID_TOKEN_CACHE, [set, public, named_table, {read_concurrency, true}]),
-  maps:fold(fun(Key, Value, _Acc) ->
-                ets:insert(?ID_TOKEN_CACHE, {Key, Value})
-            end, #{}, State),
-  {ok, State}.
+  Providers = id_token_jwks:get_providers(),
+  lists:foreach(fun({Name, Uri}) ->
+                    EtsEntry = {Name, #{ exp_at => 0
+                                       , keys => []
+                                       , well_known_uri => Uri
+                                       }},
+                      ets:insert(?ID_TOKEN_CACHE, EtsEntry)
+                end, Providers),
+  {ok, #{}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -78,18 +76,18 @@ init([]) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_call({refresh, Provider}, _From, State) ->
-  #{Provider := #{well_known_uri := WellKnownUri
-                 , exp_at := ExpAt
-                 } = Keys} = State,
+  [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
+  #{ exp_at := ExpAt
+   , keys := Keys
+   , well_known_uri := WellKnownUri} = CacheEntry,
   case ExpAt > id_token_util:now_gregorian_seconds() of
-    true -> {reply, Keys, State};
+    true -> {reply, CacheEntry, State};
     false ->
       {ok, KeysUrl} = id_token_jwks:get_jwks_uri(WellKnownUri),
       {ok, Keys} = id_token_jwks:get_pub_keys(KeysUrl),
-      Value = Keys#{well_known_uri => WellKnownUri},
-      ets:insert(?ID_TOKEN_CACHE, {Provider, Value}),
-      NewState = State#{Provider => Value},
-      {reply, Keys, NewState}
+      NewCacheEntry = Keys#{well_known_uri => WellKnownUri},
+      ets:insert(?ID_TOKEN_CACHE, {Provider, NewCacheEntry}),
+      {reply, Keys, State}
   end.
 
 %%--------------------------------------------------------------------
