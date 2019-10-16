@@ -11,6 +11,10 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Compile
-      run: rebar3 compile
+      run: make
+    - name: Run xref
+      run: make xref
     - name: Run dialyzer
-      run: rebar3 dialyzer
+      run: make dialyze
+    - name: Run elvis
+      run: make elvis_rock
