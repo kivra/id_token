@@ -35,14 +35,19 @@ start_link() ->
                                     {error, invalid_signature} |
                                     {error, expired}.
 
-validate(Provider, _IdToken) ->
-  [{google, #{exp_at := ExpAt, keys := Keys}}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
+validate(Provider, IdToken) ->
+  [{Provider, #{exp_at := ExpAt, keys := Keys}}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
    case ExpAt > id_token_util:now_gregorian_seconds() of
      true  ->
-       validate_todo;
+       validate(IdToken, Keys, []);
      false ->
-       refresh_keys(Provider)
+       #{keys := FreshKeys} = refresh_keys(Provider),
+       validate(IdToken, FreshKeys, [])
      end.
+
+%-spec validate(binary(), keys(), [{binary(), binary()}]) -> ok.
+validate(IdToken, Keys, ExpectedClaims) ->
+  {IdToken, Keys, ExpectedClaims}.
 
 refresh_keys(Provider) ->
   gen_server:call(?SERVER, {refresh, Provider}).
@@ -77,17 +82,15 @@ init([]) ->
 %%--------------------------------------------------------------------
 handle_call({refresh, Provider}, _From, State) ->
   [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
-  #{ exp_at := ExpAt
-   , keys := Keys
-   , well_known_uri := WellKnownUri} = CacheEntry,
+  #{ exp_at := ExpAt, well_known_uri := WellKnownUri} = CacheEntry,
   case ExpAt > id_token_util:now_gregorian_seconds() of
     true -> {reply, CacheEntry, State};
     false ->
       {ok, KeysUrl} = id_token_jwks:get_jwks_uri(WellKnownUri),
-      {ok, Keys} = id_token_jwks:get_pub_keys(KeysUrl),
-      NewCacheEntry = Keys#{well_known_uri => WellKnownUri},
+      {ok, NewKeys} = id_token_jwks:get_pub_keys(KeysUrl),
+      NewCacheEntry = NewKeys#{well_known_uri => WellKnownUri},
       ets:insert(?ID_TOKEN_CACHE, {Provider, NewCacheEntry}),
-      {reply, Keys, State}
+      {reply, NewKeys, State}
   end.
 
 %%--------------------------------------------------------------------
