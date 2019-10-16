@@ -3,6 +3,7 @@
 -behaviour(gen_server).
 
 %% API
+-ignore_xref([start_link/0, validate/2]).
 -export([start_link/0, validate/2]).
 
 %% gen_server callbacks
@@ -11,7 +12,7 @@
 
 -define(SERVER, id_token_server).
 -define(ID_TOKEN_CACHE, id_token_cache).
-
+-define(ETS_OPTIONS, [set, public, named_table, {read_concurrency, true}]).
 
 %%%===================================================================
 %%% API
@@ -36,7 +37,8 @@ start_link() ->
                                     {error, expired}.
 
 validate(Provider, IdToken) ->
-  [{Provider, #{exp_at := ExpAt, keys := Keys}}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
+  [{Provider, #{exp_at := ExpAt, keys := Keys}}] =
+    ets:lookup(?ID_TOKEN_CACHE, Provider),
    case ExpAt > id_token_util:now_gregorian_seconds() of
      true  ->
        id_token_jwt:validate(IdToken, Keys, []);
@@ -59,7 +61,7 @@ refresh_keys(Provider) ->
 %% @end
 %%--------------------------------------------------------------------
 init([]) ->
-  ets:new(?ID_TOKEN_CACHE, [set, public, named_table, {read_concurrency, true}]),
+  ets:new(?ID_TOKEN_CACHE, ?ETS_OPTIONS),
   Providers = id_token_jwks:get_providers(),
   lists:foreach(fun({Name, Uri}) ->
                     EtsEntry = {Name, #{ exp_at => 0

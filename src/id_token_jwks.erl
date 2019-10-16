@@ -10,7 +10,7 @@
 
 -export_type([keys/0, provider/0]).
 
--spec get_pub_keys(binary()) -> keys() | {error, any()}.
+-spec get_pub_keys(binary()) -> {ok, keys()} | {error, any()}.
 get_pub_keys(Uri) ->
   case hackney:request(get, Uri, [], <<>>, [with_body]) of
     {ok, 200, Headers, Body} ->
