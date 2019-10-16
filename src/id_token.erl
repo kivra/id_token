@@ -39,15 +39,11 @@ validate(Provider, IdToken) ->
   [{Provider, #{exp_at := ExpAt, keys := Keys}}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
    case ExpAt > id_token_util:now_gregorian_seconds() of
      true  ->
-       validate(IdToken, Keys, []);
+       id_token_jwt:validate(IdToken, Keys, []);
      false ->
        #{keys := FreshKeys} = refresh_keys(Provider),
-       validate(IdToken, FreshKeys, [])
+       id_token_jwt:validate(IdToken, FreshKeys, [])
      end.
-
-%-spec validate(binary(), keys(), [{binary(), binary()}]) -> ok.
-validate(IdToken, Keys, ExpectedClaims) ->
-  {IdToken, Keys, ExpectedClaims}.
 
 refresh_keys(Provider) ->
   gen_server:call(?SERVER, {refresh, Provider}).
@@ -146,7 +142,6 @@ format_status(_Opt, Status) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-
 
 %%%_* Emacs ============================================================
 %%% Local Variables:
