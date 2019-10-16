@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
 
-  build:
+  basic_build:
 
     runs-on: ubuntu-latest
 
@@ -14,7 +14,14 @@ jobs:
       run: make
     - name: Run xref
       run: make xref
-    - name: Run dialyzer
-      run: make dialyze
     - name: Run elvis
       run: make elvis_rock
+
+  dialyze:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Run dialyzer
+      run: make dialyze
