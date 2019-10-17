@@ -12,6 +12,9 @@ clean:
 eunit:
 	rebar3 eunit
 
+proper:
+	rebar3 proper -n 1000
+
 ct:
 	rebar3 ct -v
 

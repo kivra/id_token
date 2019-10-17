@@ -16,6 +16,8 @@ jobs:
       run: make xref
     - name: Run elvis
       run: make elvis_rock
+    - name: Run proper tests
+      run: make proper
 
   dialyze:
 
