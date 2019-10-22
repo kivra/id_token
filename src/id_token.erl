@@ -32,7 +32,10 @@ start_link() ->
 
 
 -spec validate(atom(), binary()) -> {ok, map()} |
-                                    {error, invalid_signature | expired | no_public_key_matches}.
+                                    {error, invalid_signature |
+                                            expired |
+                                            no_public_key_matches
+                                    }.
 validate(Provider, IdToken) ->
   [{Provider, #{exp_at := ExpAt, keys := Keys}}] =
     ets:lookup(?ID_TOKEN_CACHE, Provider),

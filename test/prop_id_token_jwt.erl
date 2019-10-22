@@ -4,7 +4,8 @@
 -include_lib("jose/include/jose_jwk.hrl").
 -export([rsa_key_pair/0]).
 
--define(MODULUS_SIZES, [1024]). %Higher sizes are too slow  %, 2048, 4096, 8192]).
+%Higher sizes are too slow
+-define(MODULUS_SIZES, [1024]).
 -define(EXPONENT_SIZE, 65537).
 
 %%%%%%%%%%%%%%%%%%
@@ -29,7 +30,8 @@ prop_invalid_signature() ->
             #jose_jwk{fields = OtherFields} = OtherJwk,
             JwkWithChangedKid = Jwk#jose_jwk{fields = OtherFields},
             Jwt = sign(JwkWithChangedKid, Claims),
-            {error, invalid_signature} =:= id_token_jwt:validate(Jwt, [OtherPublicKeyMap])
+            {error, invalid_signature}
+              =:= id_token_jwt:validate(Jwt, [OtherPublicKeyMap])
           end).
 
 prop_no_matching_key() ->
@@ -38,7 +40,8 @@ prop_no_matching_key() ->
           begin
             Jwt = sign(Jwk, Claims),
             PublicKeys = lists:map(fun({_, Key}) -> Key end, OtherKeys),
-            {error, no_public_key_matches} =:= id_token_jwt:validate(Jwt, PublicKeys)
+            {error, no_public_key_matches}
+              =:= id_token_jwt:validate(Jwt, PublicKeys)
           end).
 
 %%%%%%%%%%%%%%%
