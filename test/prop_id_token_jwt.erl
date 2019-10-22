@@ -17,7 +17,7 @@ prop_valid_signature() ->
             #{<<"exp">> := Exp} = Claims,
             Jwt = sign(Jwk, Claims),
             Result = id_token_jwt:validate(Jwt, [PublicKeyMap]),
-            Exp >=  erlang:system_time(second)
+            Exp =<  erlang:system_time(second)
               andalso {error, expired} =:= Result
               orelse {ok, Claims} =:= Result
           end).

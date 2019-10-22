@@ -28,7 +28,7 @@ validate_signature(Key, IdToken) ->
 validate_exp({error, _} = Error) ->
   Error;
 validate_exp({ok, #{<<"exp">> := Exp} = Claims}) ->
-  case Exp >= erlang:system_time(second) of
+  case Exp =< erlang:system_time(second) of
     true ->
       {error, expired};
     false ->
