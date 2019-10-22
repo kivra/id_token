@@ -13,7 +13,7 @@ eunit:
 	rebar3 eunit
 
 proper:
-	rebar3 proper -n 1000
+	rebar3 proper -n 100
 
 ct:
 	rebar3 ct -v
