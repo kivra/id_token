@@ -2,7 +2,7 @@ id_token -- A library to validate Id Tokens
 ===========================================
 
 id_token is a library to validate Id Tokens. Signature and expiry date are verified. The library will cache the public keys from the provider to avoid
-doing an HTTP request every time an Id Token is validadted.
+doing an HTTP request every time an Id Token is validated.
 
 ## Usage
 
