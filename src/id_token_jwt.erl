@@ -2,6 +2,8 @@
 
 -export([validate/2]).
 
+-include_lib("jose/include/jose_jwt.hrl").
+
 -spec validate(binary(), [map()]) ->
                   {ok, map()} |
                   {error, invalid_signature | expired | no_public_key_matches}.
@@ -19,7 +21,7 @@ validate(IdToken, Keys) ->
 
 validate_signature(Key, IdToken) ->
   case jose_jwt:verify(Key, IdToken) of
-    {true, {jose_jwt, Claims}, _Jws} ->
+    {true, #jose_jwt{fields = Claims}, _Jws} ->
       {ok, Claims};
     {false, _, _} ->
       {error, invalid_signature}
