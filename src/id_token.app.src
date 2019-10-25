@@ -1,5 +1,5 @@
 {application, id_token,
- [{description, "An OTP application"},
+ [{description, "An OTP application to validate Id tokens"},
   {vsn, "0.1.1"},
   {registered, []},
   {mod, {id_token_app, []}},
