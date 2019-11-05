@@ -3,8 +3,8 @@
 -behaviour(gen_server).
 
 %% API
--ignore_xref([start_link/0, validate/2]).
--export([start_link/0, validate/2]).
+-ignore_xref([start_link/0, validate/2, add_provider/2]).
+-export([start_link/0, validate/2, add_provider/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2]).
@@ -49,6 +49,10 @@ validate(Provider, IdToken) ->
 refresh_keys(Provider) ->
   gen_server:call(?SERVER, {refresh, Provider}).
 
+-spec add_provider(atom(), binary()) -> ok.
+add_provider(Name, Uri) ->
+  add_provider({Name, Uri}).
+
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
@@ -62,14 +66,17 @@ refresh_keys(Provider) ->
 init([]) ->
   ets:new(?ID_TOKEN_CACHE, ?ETS_OPTIONS),
   Providers = id_token_jwks:get_providers(),
-  lists:foreach(fun({Name, Uri}) ->
-                    EtsEntry = {Name, #{ exp_at => 0
-                                       , keys => []
-                                       , well_known_uri => Uri
-                                       }},
-                      ets:insert(?ID_TOKEN_CACHE, EtsEntry)
-                end, Providers),
+  lists:foreach(fun add_provider/1, Providers),
   {ok, #{}}.
+
+add_provider({Name, Uri}) ->
+  EtsEntry = {Name, #{ exp_at => 0
+                     , keys => []
+                     , well_known_uri => Uri
+                     }},
+  true = ets:insert(?ID_TOKEN_CACHE, EtsEntry),
+  ok.
+
 
 %%--------------------------------------------------------------------
 %% @private
