@@ -3,7 +3,7 @@
 -behaviour(gen_server).
 
 %% API
--ignore_xref([start_link/0, validate/2]).
+-ignore_xref([start_link/0, validate/2, add_provider/2]).
 -export([start_link/0, validate/2, add_provider/2]).
 
 %% gen_server callbacks
