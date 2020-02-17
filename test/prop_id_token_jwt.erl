@@ -2,10 +2,23 @@
 
 -include_lib("proper/include/proper.hrl").
 -include_lib("jose/include/jose_jwk.hrl").
+-include_lib("eunit/include/eunit.hrl").
 -export([rsa_key_pair/0]).
 
 %Higher sizes are too slow
 -define(MODULUS_SIZES, [1024]).
+
+%%%%%%%%%%%%%%%%%%%%
+%%% Eunit runner %%%
+%%%%%%%%%%%%%%%%%%%%
+
+eunit_test_() ->
+  Opts = [{numtests, 100}],
+  {inparallel,
+   [ ?_assert(proper:quickcheck(prop_valid_signature(), Opts)),
+     ?_assert(proper:quickcheck(prop_invalid_signature(), Opts)),
+     {timeout, 300, ?_assert(proper:quickcheck(prop_no_matching_key(), Opts))}
+   ]}.
 
 %%%%%%%%%%%%%%%%%%
 %%% Properties %%%
