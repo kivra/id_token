@@ -2,9 +2,7 @@
 
 -include_lib("jose/include/jose_jwk.hrl").
 
--export([ generate_rsa_key_pair/1,
-          sign/2
-        ]).
+-export([generate_rsa_key_pair/1]).
 
 -define(EXPONENT_SIZE, 65537).
 
@@ -15,14 +13,6 @@ generate_rsa_key_pair(KeySize) ->
   Jwk = Jwk0#jose_jwk{fields = #{<<"kid">> => Kid}},
   {_, PublicKeyMap} = jose_jwk:to_public_map(Jwk),
   {Jwk, PublicKeyMap}.
-
-sign(#jose_jwk{fields = #{<<"kid">> := Kid}} = Jwk, Claims) ->
-  JWS = #{
-          <<"alg">> => <<"PS256">>,
-          <<"kid">> => Kid
-         },
-  Jwt = jose_jwt:sign(Jwk, JWS, Claims),
-  jose_jws:compact(Jwt).
 
 %%%_* Emacs ============================================================
 %%% Local Variables:

@@ -1,8 +1,32 @@
 -module(id_token_jwt).
 
--export([validate/2]).
+-ignore_xref([sign/2, sign/3]).
+-export([sign/2, sign/3, validate/2]).
 
 -include_lib("jose/include/jose_jwt.hrl").
+-include_lib("jose/include/jose_jwk.hrl").
+
+%%%=============================================================================
+%%% TYPES
+%%%=============================================================================
+%% -type alg() :: <<"PS256">> | <<"PS384">> | <<"PS512">> |
+%%                <<"RS256">> | <<"RS384">> | <<"RS512">> |
+%%                <<"ES256">> | <<"ES384">> | <<"ES512">>.
+
+%% -export_type([alg/0]).
+
+%%%=============================================================================
+%%% API
+%%%=============================================================================
+-spec sign(map(), #jose_jwk{}) -> binary().
+sign(Claims, #jose_jwk{fields = #{<<"kid">> := Kid}} = JWK) ->
+  JWS0 = jose_jwk:signer(JWK),
+  JWS = JWS0#{<<"kid">> => Kid},
+  sign(Claims, JWK, JWS).
+-spec sign(map(), #jose_jwk{}, map()) -> binary().
+sign(Claims, JWK, JWS) ->
+  JWT = jose_jwt:sign(JWK, JWS, Claims),
+  jose_jws:compact(JWT).
 
 -spec validate(binary(), [map()]) ->
                   {ok, map()} |
@@ -18,6 +42,10 @@ validate(IdToken, Keys) ->
       validate_exp(validate_signature(Key, IdToken));
     false -> {error, no_public_key_matches}
   end.
+
+%%%=============================================================================
+%%% Internal functions
+%%%=============================================================================
 
 validate_signature(Key, IdToken) ->
   case jose_jwt:verify(Key, IdToken) of
@@ -37,7 +65,7 @@ validate_exp({ok, #{<<"exp">> := Exp} = Claims}) ->
       {ok, Claims}
   end.
 
-%%%_* Emacs ============================================================
+%%%_* Emacs ====================================================================
 %%% Local Variables:
 %%% allout-layout: t
 %%% erlang-indent-level: 2
