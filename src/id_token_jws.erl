@@ -15,15 +15,17 @@
 
 %% -export_type([alg/0]).
 
+-type jose_jwk() :: #jose_jwk{}.
+
 %%%=============================================================================
 %%% API
 %%%=============================================================================
--spec sign(map(), #jose_jwk{}) -> binary().
+-spec sign(map(), jose_jwk()) -> binary().
 sign(Claims, #jose_jwk{fields = #{<<"kid">> := Kid}} = JWK) ->
   JWS0 = jose_jwk:signer(JWK),
   JWS = JWS0#{<<"kid">> => Kid},
   sign(Claims, JWK, JWS).
--spec sign(map(), #jose_jwk{}, map()) -> binary().
+-spec sign(map(), jose_jwk(), map()) -> binary().
 sign(Claims, JWK, JWS) ->
   JWT = jose_jwt:sign(JWK, JWS, Claims),
   jose_jws:compact(JWT).
