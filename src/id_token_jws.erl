@@ -1,7 +1,7 @@
 -module(id_token_jws).
 
--ignore_xref([generate_key_for/2, sign/2, sign/3]).
--export([generate_key_for/2, sign/2, sign/3, validate/2]).
+-ignore_xref([generate_key_for/1, generate_key_for/2, sign/2, sign/3]).
+-export([generate_key_for/1, generate_key_for/2, sign/2, sign/3, validate/2]).
 
 -include_lib("jose/include/jose_jwt.hrl").
 -include_lib("jose/include/jose_jwk.hrl").
@@ -45,6 +45,9 @@ validate(IdToken, Keys) ->
       validate_exp(validate_signature(Key, IdToken));
     false -> {error, no_public_key_matches}
   end.
+
+-spec generate_key_for(binary()) -> {jose_jwk(), map()}.
+generate_key_for(Alg) -> generate_key_for(Alg, #{}).
 
 -spec generate_key_for(binary(), key_options()) -> {jose_jwk(), map()}.
 generate_key_for(Alg, Options) ->

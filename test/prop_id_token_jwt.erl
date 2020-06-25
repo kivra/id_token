@@ -7,13 +7,16 @@
 
 %Higher sizes are too slow
 -define(MODULUS_SIZES, [1024]).
+-define(ALGS, [<<"PS256">>, <<"PS384">>, <<"PS512">>,
+               <<"RS256">>, <<"RS384">>, <<"RS512">>,
+               <<"ES256">>, <<"ES384">>, <<"ES512">>]).
 
 %%%%%%%%%%%%%%%%%%%%
 %%% Eunit runner %%%
 %%%%%%%%%%%%%%%%%%%%
 
 eunit_test_() ->
-  Opts = [{numtests, 100}],
+  Opts = [{numtests, 25}],
   {inparallel,
    [ ?_assert(proper:quickcheck(prop_valid_signature(), Opts)),
      ?_assert(proper:quickcheck(prop_invalid_signature(), Opts)),
@@ -67,9 +70,9 @@ jwt_claims() ->
        BaseMap#{<<"aud">> => Aud, <<"exp">> => Exp}).
 
 rsa_key_pair() ->
-  ?LET(KeySize,
-       oneof(?MODULUS_SIZES),
-       id_token_test_util:generate_rsa_key_pair(KeySize)).
+  ?LET({KeySize, Alg},
+       {oneof(?MODULUS_SIZES), oneof(?ALGS)},
+       id_token_jws:generate_key_for(Alg, #{key_size => KeySize})).
 
 %%%_* Emacs ============================================================
 %%% Local Variables:

@@ -12,11 +12,14 @@ groups() -> [].
 
 all() -> [validate_jwt, keys_are_cached].
 
-init_per_suite(Config) -> Config.
+init_per_suite(Config) ->
+  application:ensure_all_started(jose),
+  Config.
 end_per_suite(_Config) -> ok.
 
 init_per_testcase(_TestCase, Config) ->
-  {Jwk, PublicKeyMap} = id_token_test_util:generate_rsa_key_pair(1024),
+  {Jwk, PublicKeyMap} =
+    id_token_jws:generate_key_for(<<"PS256">>, #{key_size => 1024}),
   Claims = #{ <<"exp">> => erlang:system_time(second) + 10},
   Jwt = id_token_jws:sign(Claims, Jwk),
   mock_id_provider(PublicKeyMap),
