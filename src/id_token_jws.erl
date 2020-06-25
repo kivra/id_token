@@ -64,6 +64,7 @@ generate_key_for(Alg, Options) ->
 %%%=============================================================================
 %%% Internal functions
 %%%=============================================================================
+-define(EXPONENT_SIZE, 65537).
 
 validate_signature(Key, IdToken) ->
   case jose_jwt:verify(Key, IdToken) of
@@ -85,8 +86,7 @@ validate_exp({ok, #{<<"exp">> := Exp} = Claims}) ->
 
 generate_rsa_key(_Alg, Options) ->
   KeySize = maps:get(key_size, Options, 2048),
-  {Key, _Fields} = jose_jwk_kty_rsa:generate_key({rsa, KeySize}),
-  Key.
+  public_key:generate_key({rsa, KeySize, ?EXPONENT_SIZE}).
 
 generate_ec_key(Alg, _Options) ->
   Curve = alg_to_curve(Alg),

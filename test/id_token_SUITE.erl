@@ -19,7 +19,7 @@ end_per_suite(_Config) -> ok.
 
 init_per_testcase(_TestCase, Config) ->
   {Jwk, PublicKeyMap} =
-    id_token_jws:generate_key_for(<<"PS256">>, #{key_size => 1024}),
+    id_token_jws:generate_key_for(<<"RS256">>, #{key_size => 1024}),
   Claims = #{ <<"exp">> => erlang:system_time(second) + 10},
   Jwt = id_token_jws:sign(Claims, Jwk),
   mock_id_provider(PublicKeyMap),
