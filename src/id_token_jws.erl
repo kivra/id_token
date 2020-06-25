@@ -1,4 +1,4 @@
--module(id_token_jwt).
+-module(id_token_jws).
 
 -ignore_xref([sign/2, sign/3]).
 -export([sign/2, sign/3, validate/2]).

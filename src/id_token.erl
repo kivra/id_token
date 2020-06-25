@@ -40,10 +40,10 @@ validate(Provider, IdToken) ->
     ets:lookup(?ID_TOKEN_CACHE, Provider),
    case ExpAt > id_token_util:now_gregorian_seconds() of
      true  ->
-       id_token_jwt:validate(IdToken, Keys);
+       id_token_jws:validate(IdToken, Keys);
      false ->
        #{keys := FreshKeys} = refresh_keys(Provider),
-       id_token_jwt:validate(IdToken, FreshKeys)
+       id_token_jws:validate(IdToken, FreshKeys)
      end.
 
 refresh_keys(Provider) ->
