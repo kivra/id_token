@@ -1,7 +1,7 @@
 -module(id_token_jws).
 
--ignore_xref([sign/2, sign/3]).
--export([sign/2, sign/3, validate/2]).
+-ignore_xref([generate_key_for/2, sign/2, sign/3]).
+-export([generate_key_for/2, sign/2, sign/3, validate/2]).
 
 -include_lib("jose/include/jose_jwt.hrl").
 -include_lib("jose/include/jose_jwk.hrl").
@@ -16,6 +16,7 @@
 %% -export_type([alg/0]).
 
 -type jose_jwk() :: #jose_jwk{}.
+-type key_options() :: #{key_size := pos_integer()}.
 
 %%%=============================================================================
 %%% API
@@ -45,6 +46,18 @@ validate(IdToken, Keys) ->
     false -> {error, no_public_key_matches}
   end.
 
+-spec generate_key_for(binary(), key_options()) -> {jose_jwk(), map()}.
+generate_key_for(Alg, Options) ->
+  Key = case Alg of
+          <<"ES", _S/binary>> -> generate_ec_key(Alg, Options);
+          _ -> generate_rsa_key(Alg, Options)
+        end,
+  Jwk0 = jose_jwk:from_key(Key),
+  Jwk = Jwk0#jose_jwk{fields = #{<<"kid">> => kid(Options),
+                                <<"use">> => <<"sig">>}},
+  {_, PublicKeyMap} = jose_jwk:to_public_map(Jwk),
+  {Jwk, PublicKeyMap}.
+
 %%%=============================================================================
 %%% Internal functions
 %%%=============================================================================
@@ -66,6 +79,24 @@ validate_exp({ok, #{<<"exp">> := Exp} = Claims}) ->
     false ->
       {ok, Claims}
   end.
+
+generate_rsa_key(_Alg, Options) ->
+  KeySize = maps:get(key_size, Options, 2048),
+  {Key, _Fields} = jose_jwk_kty_rsa:generate_key({rsa, KeySize}),
+  Key.
+
+generate_ec_key(Alg, _Options) ->
+  Curve = alg_to_curve(Alg),
+  {Key, _Fields} = jose_jwk_kty_ec:generate_key(Curve),
+  Key.
+
+alg_to_curve(<<"ES256">>) -> <<"P-256">>;
+alg_to_curve(<<"ES384">>) -> <<"P-384">>;
+alg_to_curve(<<"ES512">>) -> <<"P-521">>.
+
+kid(#{kid := Kid}) -> Kid;
+kid(_) -> base64url:encode(crypto:strong_rand_bytes(16)).
+
 
 %%%_* Emacs ====================================================================
 %%% Local Variables:
