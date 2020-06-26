@@ -29,7 +29,8 @@ sign(Claims, #jose_jwk{fields = #{<<"kid">> := Kid}} = JWK) ->
 -spec sign(map(), jose_jwk(), map()) -> binary().
 sign(Claims, JWK, JWS) ->
   JWT = jose_jwt:sign(JWK, JWS, Claims),
-  jose_jws:compact(JWT).
+  {_Modules, JWTBin} = jose_jws:compact(JWT),
+  JWTBin.
 
 -spec validate(binary(), [map()]) ->
                   {ok, map()} |
