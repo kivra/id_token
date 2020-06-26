@@ -3,7 +3,6 @@
 -include_lib("proper/include/proper.hrl").
 -include_lib("jose/include/jose_jwk.hrl").
 -include_lib("eunit/include/eunit.hrl").
--export([rsa_key_pair/0]).
 
 %Higher sizes are too slow
 -define(MODULUS_SIZES, [1024]).
@@ -28,7 +27,7 @@ eunit_test_() ->
 %%%%%%%%%%%%%%%%%%
 prop_valid_signature() ->
   ?FORALL({{Jwk, PublicKeyMap}, Claims},
-          {rsa_key_pair(), jwt_claims()},
+          {key_pair(), jwt_claims()},
           begin
             #{<<"exp">> := Exp} = Claims,
             Jwt = id_token_jws:sign(Claims, Jwk),
@@ -40,7 +39,7 @@ prop_valid_signature() ->
 
 prop_invalid_signature() ->
   ?FORALL({{Jwk, _PublicKeyMap}, {OtherJwk, OtherPublicKeyMap}, Claims},
-          {rsa_key_pair(), rsa_key_pair(), jwt_claims()},
+          {key_pair(), key_pair(), jwt_claims()},
           begin
             #jose_jwk{fields = OtherFields} = OtherJwk,
             JwkWithChangedKid = Jwk#jose_jwk{fields = OtherFields},
@@ -51,7 +50,7 @@ prop_invalid_signature() ->
 
 prop_no_matching_key() ->
   ?FORALL({[{Jwk, _PublicKeyMap} | OtherKeys], Claims},
-          {non_empty(list(rsa_key_pair())), jwt_claims()},
+          {non_empty(list(key_pair())), jwt_claims()},
           begin
             Jwt = id_token_jws:sign(Claims, Jwk),
             PublicKeys = lists:map(fun({_, Key}) -> Key end, OtherKeys),
@@ -69,7 +68,7 @@ jwt_claims() ->
        {map(utf8(), utf8()), utf8(), choose(BaseTime - 3, BaseTime + 3)},
        BaseMap#{<<"aud">> => Aud, <<"exp">> => Exp}).
 
-rsa_key_pair() ->
+key_pair() ->
   ?LET({KeySize, Alg},
        {oneof(?MODULUS_SIZES), oneof(?ALGS)},
        id_token_jws:generate_key_for(Alg, #{key_size => KeySize})).
