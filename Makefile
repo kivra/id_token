@@ -10,13 +10,13 @@ clean:
 	rebar3 clean
 
 eunit:
-	rebar3 eunit
+	rebar3 do eunit -c, cover
 
 proper:
 	rebar3 proper -n 100
 
 ct:
-	rebar3 ct -v
+	rebar3 do ct -c, cover
 
 xref:
 	rebar3 xref
