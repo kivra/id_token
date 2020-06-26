@@ -16,7 +16,7 @@
 %% -export_type([alg/0]).
 
 -type jose_jwk() :: #jose_jwk{}.
--type key_options() :: #{key_size := pos_integer()}.
+-type key_options() :: #{key_size => pos_integer()}.
 
 %%%=============================================================================
 %%% API
