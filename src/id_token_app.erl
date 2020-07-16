@@ -10,9 +10,13 @@
 -export([start/2, stop/1]).
 
 start(_StartType, _StartArgs) ->
-    id_token_sup:start_link().
+  id_token_sup:start_link().
 
 stop(_State) ->
-    ok.
+  ok.
 
-%% internal functions
+%%%_* Emacs ============================================================
+%%% Local Variables:
+%%% allout-layout: t
+%%% erlang-indent-level: 2
+%%% End:

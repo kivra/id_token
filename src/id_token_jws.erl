@@ -101,7 +101,6 @@ alg_to_curve(<<"ES512">>) -> <<"P-521">>.
 kid(#{kid := Kid}) -> Kid;
 kid(_) -> base64url:encode(crypto:strong_rand_bytes(16)).
 
-
 %%%_* Emacs ====================================================================
 %%% Local Variables:
 %%% allout-layout: t

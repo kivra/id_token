@@ -14,7 +14,7 @@
 -define(SERVER, ?MODULE).
 
 start_link() ->
-    supervisor:start_link({local, ?SERVER}, ?MODULE, []).
+  supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 init([]) ->
   SupFlags = #{strategy => one_for_one, intensity => 10, period => 1},
@@ -28,3 +28,9 @@ init([]) ->
                 }
                ],
   {ok, {SupFlags, ChildSpecs}}.
+
+%%%_* Emacs ============================================================
+%%% Local Variables:
+%%% allout-layout: t
+%%% erlang-indent-level: 2
+%%% End:

@@ -77,7 +77,6 @@ add_provider({Name, Uri}) ->
   true = ets:insert(?ID_TOKEN_CACHE, EtsEntry),
   ok.
 
-
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
