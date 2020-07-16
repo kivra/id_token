@@ -12,17 +12,18 @@
 -export(?EXPORTS).
 -ignore_xref([behaviour_info/1 | ?EXPORTS]).
 
--callback delete(Kid :: binary()) -> ok | {error, Reason :: term()}.
--callback get(Kid :: binary()) -> {ok, Key :: map()} | {error, Reason :: term()}.
--callback get_all() -> {ok, Keys :: [map()]} | {error, Reason :: term()}.
--callback put(Key :: map()) -> ok | {error, Reason :: term()}.
+-callback delete(Kid :: binary()) -> ok | {error, Rsn :: term()}.
+-callback get(Kid :: binary()) -> {ok, Key :: map()} | {error, Rsn :: term()}.
+-callback get_all() -> {ok, Keys :: [map()]} | {error, Rsn :: term()}.
+-callback put(Key :: map()) -> ok | {error, Rsn :: term()}.
 -callback start() -> term().
 -callback stop() -> term().
 
 -optional_callbacks([start/0, stop/0]).
 
--define(BACKEND,
-        (application:get_env(id_token, pubkeys_storage_module, ets_pubkeys_storage))).
+-define(BACKEND, (application:get_env(id_token,
+                                      pubkeys_storage_module,
+                                      ets_pubkeys_storage))).
 
 -define(call_callback(Args),
         begin
