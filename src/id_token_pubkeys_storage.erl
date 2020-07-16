@@ -1,13 +1,16 @@
 -module(id_token_pubkeys_storage).
 
--export([delete/1,
-         get/1,
-         get_all/0,
-         put/1,
-         start/0,
-         stop/0,
-         delete_older_than/1
-        ]).
+-define(EXPORTS, [delete/1,
+                  get/1,
+                  get_all/0,
+                  put/1,
+                  start/0,
+                  stop/0,
+                  delete_older_than/1
+                 ]).
+
+-export(?EXPORTS).
+-ignore_xref([behaviour_info/1 | ?EXPORTS]).
 
 -callback delete(Kid :: binary()) -> ok | {error, Reason :: term()}.
 -callback get(Kid :: binary()) -> {ok, Key :: map()} | {error, Reason :: term()}.
