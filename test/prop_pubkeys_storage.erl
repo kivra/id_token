@@ -9,7 +9,6 @@
 %%%%%%%%%%%%%%%%%%%%
 %%% Eunit runner %%%
 %%%%%%%%%%%%%%%%%%%%
-
 eunit_test_() ->
   Opts = [{numtests, 100}],
   ?_assert(proper:quickcheck(prop_test(), Opts)).
@@ -86,8 +85,6 @@ key() ->
 
 kid() ->
   ?LET(Int, integer(1,10), integer_to_binary(Int)).
-
-
 
 %%%_* Emacs ============================================================
 %%% Local Variables:
