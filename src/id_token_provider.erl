@@ -17,11 +17,13 @@
 start_link() ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
+-spec get_cached_keys(atom()) -> id_token_jwks:keys().
 get_cached_keys(Provider) ->
   [{Provider, #{exp_at := ExpAt, keys := Keys}}] =
     ets:lookup(?ID_TOKEN_CACHE, Provider),
   #{exp_at => ExpAt, keys => Keys}.
 
+-spec refresh_keys(atom()) -> id_token_jwks:keys().
 refresh_keys(Provider) ->
   gen_server:call(?SERVER, {refresh, Provider}).
 
