@@ -10,7 +10,15 @@
                                             no_public_key_matches
                                     }.
 validate(Provider, IdToken) ->
-  id_token_validation:validate(Provider, IdToken).
+  #{exp_at := ExpAt, keys := Keys} =
+    id_token_provider:get_cached_keys(Provider),
+  case ExpAt > id_token_util:now_gregorian_seconds() of
+    true  ->
+      id_token_jws:validate(IdToken, Keys);
+    false ->
+      #{keys := FreshKeys} = id_token_provider:refresh_keys(Provider),
+      id_token_jws:validate(IdToken, FreshKeys)
+  end.
 
 %%%_* Emacs ============================================================
 %%% Local Variables:

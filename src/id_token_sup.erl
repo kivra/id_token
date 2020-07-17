@@ -20,7 +20,7 @@ init([]) ->
   SupFlags = #{strategy => one_for_one, intensity => 10, period => 1},
 
   ChildSpecs = [#{id => id_token,
-                 start => {id_token_validation, start_link, []},
+                 start => {id_token_provider, start_link, []},
                  restart => permanent,
                  shutdown => brutal_kill,
                  type => worker,

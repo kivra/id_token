@@ -1,42 +1,26 @@
--module(id_token_validation).
+-module(id_token_provider).
 
 -behaviour(gen_server).
 
 %% API
--define(API, [start_link/0, validate/2, refresh_keys/1, add_provider/2]).
+-define(API, [start_link/0, get_cached_keys/1, refresh_keys/1, add_provider/2]).
 -ignore_xref(?API).
 -export([init/1, handle_call/3, handle_cast/2 | ?API]).
 
--define(SERVER, id_token_validation_server).
--define(ID_TOKEN_CACHE, id_token_cache).
+-define(SERVER, id_token_provider_server).
+-define(ID_TOKEN_CACHE, id_token_provider_keys).
 -define(ETS_OPTIONS, [set, public, named_table, {read_concurrency, true}]).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
--spec start_link() -> {ok, Pid :: pid()} |
-                      {error, Error :: {already_started, pid()}} |
-                      {error, Error :: term()} |
-                      ignore.
 start_link() ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
-
--spec validate(atom(), binary()) -> {ok, map()} |
-                                    {error, invalid_signature |
-                                            expired |
-                                            no_public_key_matches
-                                    }.
-validate(Provider, IdToken) ->
+get_cached_keys(Provider) ->
   [{Provider, #{exp_at := ExpAt, keys := Keys}}] =
     ets:lookup(?ID_TOKEN_CACHE, Provider),
-   case ExpAt > id_token_util:now_gregorian_seconds() of
-     true  ->
-       id_token_jws:validate(IdToken, Keys);
-     false ->
-       #{keys := FreshKeys} = refresh_keys(Provider),
-       id_token_jws:validate(IdToken, FreshKeys)
-     end.
+  #{exp_at => ExpAt, keys => Keys}.
 
 refresh_keys(Provider) ->
   gen_server:call(?SERVER, {refresh, Provider}).
@@ -53,14 +37,6 @@ init([]) ->
   Providers = id_token_jwks:get_providers(),
   lists:foreach(fun add_provider/1, Providers),
   {ok, #{}}.
-
-add_provider({Name, Uri}) ->
-  EtsEntry = {Name, #{ exp_at => 0
-                     , keys => []
-                     , well_known_uri => Uri
-                     }},
-  true = ets:insert(?ID_TOKEN_CACHE, EtsEntry),
-  ok.
 
 handle_call({refresh, Provider}, _From, State) ->
   [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
@@ -81,6 +57,13 @@ handle_cast(_Request, State) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+add_provider({Name, Uri}) ->
+  EtsEntry = {Name, #{ exp_at => 0
+                     , keys => []
+                     , well_known_uri => Uri
+                     }},
+  true = ets:insert(?ID_TOKEN_CACHE, EtsEntry),
+  ok.
 
 %%%_* Emacs ============================================================
 %%% Local Variables:
