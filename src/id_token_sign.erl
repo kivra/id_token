@@ -12,8 +12,8 @@
         | ?API]).
 
 -define(SERVER, ?MODULE).
-
--record(state, {}).
+-define(KEY_USE_TIME, 86400). %% 1 day
+-define(KEY_EXPIRES_IN, 172800). %% 2 days
 
 %%%===================================================================
 %%% API
