@@ -1,8 +1,8 @@
 -module(id_token).
 
 %% API
--ignore_xref([validate/2]).
--export([validate/2]).
+-ignore_xref([validate/2, sign/2]).
+-export([validate/2, sign/2]).
 
 -spec validate(atom(), binary()) -> {ok, map()} |
                                     {error, invalid_signature |
@@ -19,6 +19,10 @@ validate(Provider, IdToken) ->
       #{keys := FreshKeys} = id_token_provider:refresh_keys(Provider),
       id_token_jws:validate(IdToken, FreshKeys)
   end.
+
+sign(Alg, Claims) ->
+  SignKeyFun = id_token_sign:get_sign_key_fun(Alg),
+  id_token_jws:sign(Claims, SignKeyFun).
 
 %%%_* Emacs ============================================================
 %%% Local Variables:

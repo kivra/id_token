@@ -3,7 +3,10 @@
 -behaviour(gen_server).
 
 %% API
--define(API, [start_link/0]).
+-define(API, [start_link/0, stop/0,
+              get_active_public_keys/0, get_active_public_keys/1,
+              get_sign_algs/0, get_sign_key_fun/1,
+              refresh_key/2, add_key_for/2]).
 -ignore_xref(?API).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2
         | ?API]).
@@ -19,13 +22,33 @@
 start_link() ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
+stop() ->
+  gen_server:stop(?SERVER).
+
+get_active_public_keys() ->
+  [].
+
+get_active_public_keys(_Alg) ->
+  [].
+
+get_sign_key_fun(_Alg) ->
+  fun() -> ok end.
+
+get_sign_algs() ->
+  [].
+
+refresh_key(_Alg, _Options) ->
+  ok.
+
+add_key_for(_Alg, _Options) ->
+  ok.
+
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
 
 init([]) ->
-  process_flag(trap_exit, true),
-  {ok, #state{}}.
+  {ok, #{}}.
 
 handle_call(_Request, _From, State) ->
   Reply = ok,
