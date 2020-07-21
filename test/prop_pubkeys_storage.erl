@@ -10,7 +10,7 @@
 %%% Eunit runner %%%
 %%%%%%%%%%%%%%%%%%%%
 eunit_test_() ->
-  Opts = [{numtests, 100}],
+  Opts = [{numtests, 30}],
   ?_assert(proper:quickcheck(prop_test(), Opts)).
 
 %%%%%%%%%%%%%%%%%%
