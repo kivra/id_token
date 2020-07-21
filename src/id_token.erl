@@ -21,8 +21,10 @@ validate(Provider, IdToken) ->
   end.
 
 sign(Alg, Claims) ->
-  SignKeyFun = id_token_sign:get_sign_key_fun(Alg),
-  id_token_jws:sign(Claims, SignKeyFun).
+  case id_token_sign:get_sign_key_fun(Alg) of
+    {error, not_found} -> {error, no_key_for_alg};
+    {ok, SignKeyFun} -> id_token_jws:sign(Claims, SignKeyFun())
+  end.
 
 %%%_* Emacs ============================================================
 %%% Local Variables:
