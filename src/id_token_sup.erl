@@ -19,12 +19,19 @@ start_link() ->
 init([]) ->
   SupFlags = #{strategy => one_for_one, intensity => 10, period => 1},
 
-  ChildSpecs = [#{id => id_token,
+  ChildSpecs = [#{id => id_token_provider,
                  start => {id_token_provider, start_link, []},
                  restart => permanent,
                  shutdown => brutal_kill,
                  type => worker,
-                 modules => [id_token]
+                 modules => [id_token_provider]
+                },
+                #{id => id_token_sign,
+                 start => {id_token_sign, start_link, []},
+                 restart => permanent,
+                 shutdown => brutal_kill,
+                 type => worker,
+                 modules => [id_token_sign]
                 }
                ],
   {ok, {SupFlags, ChildSpecs}}.
