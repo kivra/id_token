@@ -8,8 +8,7 @@
               get_sign_algs/0, get_sign_key_fun/1,
               add_key_for/2]).
 -ignore_xref(?API).
--export([init/1, handle_call/3, handle_cast/2, handle_info/2
-        | ?API]).
+-export([init/1, handle_call/3, handle_cast/2 | ?API]).
 
 -define(SERVER, ?MODULE).
 -define(KEY_USE_TIME, 86400). %% 1 day
@@ -59,16 +58,7 @@ handle_call({add_key, Alg, Options}, _From, State) ->
   %% crashing means loosing the private key that are in ets
   {reply, id_token_pubkeys_storage:put(PublicKeyMap), State}.
 
-handle_cast(_Request, State) ->
-  {noreply, State}.
-
--spec handle_info(Info :: timeout() | term(), State :: term()) ->
-                     {noreply, NewState :: term()} |
-                     {noreply, NewState :: term(), Timeout :: timeout()} |
-                     {noreply, NewState :: term(), hibernate} |
-                     {stop, Reason :: normal | term(), NewState :: term()}.
-handle_info(_Info, State) ->
-  {noreply, State}.
+handle_cast(_Request, State) -> {noreply, State}.
 
 %%%===================================================================
 %%% Internal functions
