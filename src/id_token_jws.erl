@@ -58,7 +58,8 @@ generate_key_for(Alg, Options) ->
         end,
   Jwk0 = jose_jwk:from_key(Key),
   Jwk = Jwk0#jose_jwk{fields = #{<<"kid">> => kid(Options),
-                                <<"use">> => <<"sig">>}},
+                                 <<"use">> => <<"sig">>,
+                                 <<"iat">> => iat(Options)}},
   {_, PublicKeyMap} = jose_jwk:to_public_map(Jwk),
   {Jwk, PublicKeyMap}.
 
@@ -100,6 +101,9 @@ alg_to_curve(<<"ES512">>) -> <<"P-521">>.
 
 kid(#{kid := Kid}) -> Kid;
 kid(_) -> base64url:encode(crypto:strong_rand_bytes(16)).
+
+iat(#{iat := Iat}) -> Iat;
+iat(_) -> erlang:system_time(seconds).
 
 %%%_* Emacs ====================================================================
 %%% Local Variables:
