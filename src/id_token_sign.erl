@@ -65,15 +65,15 @@ handle_info(timeout, Timers) ->
   {noreply, State, timeout(State)};
 handle_info(async_setup, _State) ->
   SignKeys = application:get_env(id_token, sign_keys, []),
-  Timers = lists:sort([put_key_for(Alg, Options) || {Alg, Options} <- SignKeys]),
+  Timers = lists:sort([put_key_for(Alg, Opts) || {Alg, Opts} <- SignKeys]),
   {noreply, Timers, timeout(Timers)};
-handle_info(_Request, #{timers := Timers} = State0) ->
-  case timeout(State0) of
+handle_info(_Request, Timers0) ->
+  case timeout(Timers0) of
     T when T > 0 ->
-      {noreply, State0, T};
+      {noreply, Timers0, T};
     _T ->
-      State = #{timers => refresh_exp_keys(Timers)},
-      {noreply, State, timeout(State)}
+      Timers = refresh_exp_keys(Timers0),
+      {noreply, Timers, timeout(Timers)}
   end.
 
 %%%===================================================================
