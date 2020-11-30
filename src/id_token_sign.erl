@@ -87,7 +87,7 @@ put_key_for(Alg, Options) ->
 
 timeout([]) -> infinity;
 timeout([{Exp, _, _} | _Timers]) ->
-  Exp - erlang:system_time(seconds).
+  (Exp - erlang:system_time(seconds)) * 1000.
 
 refresh_exp_keys(KeyTimers) ->
   Now = erlang:system_time(seconds),
