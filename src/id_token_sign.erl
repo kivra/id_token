@@ -18,7 +18,6 @@
 %%%===================================================================
 %%% API
 %%%===================================================================
-
 start_link() ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
@@ -48,9 +47,9 @@ add_key_for(Alg, Options) ->
 init([]) ->
   id_token_pubkeys_storage:start(),
   ets:new(?MODULE, ?ETS_OPTIONS),
-  %% Setup asynchronously since key generation can take time
-  self() ! async_setup,
-  {ok, []}.
+  SignKeys = application:get_env(id_token, sign_keys, []),
+  Timers = lists:sort([put_key_for(Alg, Opts) || {Alg, Opts} <- SignKeys]),
+  {ok, Timers, timeout(Timers)}.
 
 handle_call({add_key, Alg, Options}, _From, Timers0) ->
   Timer = put_key_for(Alg, Options),
@@ -63,10 +62,6 @@ handle_cast(_Request, State) -> {noreply, State}.
 handle_info(timeout, Timers) ->
   State = refresh_exp_keys(Timers),
   {noreply, State, timeout(State)};
-handle_info(async_setup, _State) ->
-  SignKeys = application:get_env(id_token, sign_keys, []),
-  Timers = lists:sort([put_key_for(Alg, Opts) || {Alg, Opts} <- SignKeys]),
-  {noreply, Timers, timeout(Timers)};
 handle_info(_Request, Timers0) ->
   case timeout(Timers0) of
     T when T > 0 ->
@@ -79,11 +74,9 @@ handle_info(_Request, Timers0) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-
 put_key_for(Alg, Options) ->
   {Jwk, PublicKeyMap} = id_token_jws:generate_key_for(Alg, Options),
   SignKeyFun = fun() -> Jwk end,
-  erlang:display({Jwk, SignKeyFun}),
   #{<<"kid">> := Kid, <<"iat">> := Iat} = PublicKeyMap,
   TTU = maps:get(ttu, Options, ?TTU),
   Exp = Iat + TTU,
