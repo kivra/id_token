@@ -44,7 +44,7 @@ stop() -> ?call_callback([]).
 
 -spec delete_older_than(Timestamp :: integer()) -> {ok, Keys :: [map()]} |
                                                    {error, Reason :: term()}.
-delete_older_than(_Timestamp) ->
+delete_older_than(TimeInSeconds) ->
   try
     Mod = ?BACKEND,
     {ok, Keys} = Mod:get_all(),
@@ -53,8 +53,8 @@ delete_older_than(_Timestamp) ->
                    ok = Mod:delete(Kid),
                    Key
                  end
-                 || #{<<"expiry_time">> := ET, <<"kid">> := Kid} = Key <- Keys,
-                    ET > Now
+                 || #{<<"iat">> := IAt, <<"kid">> := Kid} = Key <- Keys,
+                    IAt + TimeInSeconds =< Now
                 ],
     {ok, OlderKeys}
   catch
