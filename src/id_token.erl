@@ -14,10 +14,14 @@ validate(Provider, IdToken) ->
     id_token_provider:get_cached_keys(Provider),
   case ExpAt > id_token_util:now_gregorian_seconds() of
     true  ->
-      id_token_jws:validate(IdToken, Keys);
+      case id_token_jws:validate(IdToken, Keys) of
+        {error, no_public_key_matches} ->
+          refresh_and_validate(Provider, IdToken);
+        Result ->
+          Result
+      end;
     false ->
-      #{keys := FreshKeys} = id_token_provider:refresh_keys(Provider),
-      id_token_jws:validate(IdToken, FreshKeys)
+      refresh_and_validate(Provider, IdToken)
   end.
 
 sign(Alg, Claims) ->
@@ -25,6 +29,10 @@ sign(Alg, Claims) ->
     {error, not_found} -> {error, no_key_for_alg};
     {ok, SignKeyFun} -> id_token_jws:sign(Claims, SignKeyFun())
   end.
+
+refresh_and_validate(Provider, IdToken) ->
+  #{keys := FreshKeys} = id_token_provider:refresh_keys(Provider),
+  id_token_jws:validate(IdToken, FreshKeys).
 
 %%%_* Emacs ============================================================
 %%% Local Variables:
