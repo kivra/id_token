@@ -61,9 +61,11 @@ handle_info({refresh, Provider}, State) ->
   RevalidateTime = ExpAt - ?REVALIDATE_DELAY,
   case Now < RevalidateTime of
     true ->
-      timer:send_after((RevalidateTime - Now) * 1000, self(), {refresh, Provider});
+      timer:send_after((RevalidateTime - Now) * 1000,
+                       self(), {refresh, Provider});
     false ->
-      %% Not enough time for revalidation, let the first request pay the price
+      %% Not enough time for revalidation,
+      %% let the first request pay the price
       ok
   end,
   {noreply, State}.
