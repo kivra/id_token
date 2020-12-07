@@ -75,17 +75,15 @@ maybe_refresh(Provider) ->
   #{exp_at := ExpAt, well_known_uri := WellKnownUri} = CacheEntry,
   case ExpAt > id_token_util:now_gregorian_seconds() of
     true -> CacheEntry;
-    false ->
-      {ok, KeysUrl} = id_token_jwks:get_jwks_uri(WellKnownUri),
-      {ok, NewKeys} = id_token_jwks:get_pub_keys(KeysUrl),
-      NewCacheEntry = NewKeys#{well_known_uri => WellKnownUri},
-      ets:insert(?ID_TOKEN_CACHE, {Provider, NewCacheEntry}),
-      NewKeys
+    false -> refresh(Provider, WellKnownUri)
   end.
 
 refresh(Provider) ->
   [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
   #{well_known_uri := WellKnownUri} = CacheEntry,
+  refresh(Provider, WellKnownUri).
+
+refresh(Provider, WellKnownUri) ->
   {ok, KeysUrl} = id_token_jwks:get_jwks_uri(WellKnownUri),
   {ok, NewKeys} = id_token_jwks:get_pub_keys(KeysUrl),
   NewCacheEntry = NewKeys#{well_known_uri => WellKnownUri},
