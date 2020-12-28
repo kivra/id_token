@@ -100,7 +100,7 @@ alg_to_curve(<<"ES384">>) -> <<"P-384">>;
 alg_to_curve(<<"ES512">>) -> <<"P-521">>.
 
 kid(#{kid := Kid}) -> Kid;
-kid(_) -> base64url:encode(crypto:strong_rand_bytes(16)).
+kid(_) -> jose_base64url:encode(crypto:strong_rand_bytes(16)).
 
 iat(#{iat := Iat}) -> Iat;
 iat(_) -> erlang:system_time(seconds).

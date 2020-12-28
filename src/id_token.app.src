@@ -7,8 +7,7 @@
    [kernel,
     stdlib,
     hackney,
-    jose,
-    base64url
+    jose
    ]},
   {env,[]},
   {modules, []},
