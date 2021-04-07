@@ -16,7 +16,8 @@ validate(Provider, IdToken) ->
     true  ->
       case id_token_jws:validate(IdToken, Keys) of
         {error, no_public_key_matches} ->
-          refresh_and_validate(Provider, IdToken);
+          refresh_and_validate(Provider, IdToken,
+                               #{force_refresh => true});
         Result ->
           Result
       end;
@@ -31,7 +32,11 @@ sign(Alg, Claims) ->
   end.
 
 refresh_and_validate(Provider, IdToken) ->
-  #{keys := FreshKeys} = id_token_provider:refresh_keys(Provider),
+  refresh_and_validate(Provider, IdToken, #{}).
+
+refresh_and_validate(Provider, IdToken, Opts) ->
+  #{keys := FreshKeys} =
+    id_token_provider:refresh_keys(Provider, Opts),
   id_token_jws:validate(IdToken, FreshKeys).
 
 %%%_* Emacs ============================================================
