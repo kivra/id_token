@@ -50,7 +50,7 @@ init([]) ->
   {ok, #{}}.
 
 handle_call({refresh, Provider}, _From, State) ->
-  {reply, maybe_refresh(Provider), State}.
+  {reply, refresh(Provider), State}.
 
 handle_cast(_Request, State) ->
   {noreply, State}.
@@ -69,14 +69,6 @@ handle_info({refresh, Provider}, State) ->
       ok
   end,
   {noreply, State}.
-
-maybe_refresh(Provider) ->
-  [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
-  #{exp_at := ExpAt, well_known_uri := WellKnownUri} = CacheEntry,
-  case ExpAt > id_token_util:now_gregorian_seconds() of
-    true -> CacheEntry;
-    false -> refresh(Provider, WellKnownUri)
-  end.
 
 refresh(Provider) ->
   [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
