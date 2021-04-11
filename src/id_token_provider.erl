@@ -3,7 +3,8 @@
 -behaviour(gen_server).
 
 %% API
--define(API, [start_link/0, get_cached_keys/1, refresh_keys/2, add_provider/2]).
+-define(API, [start_link/0, get_cached_keys/1,
+              refresh_keys/1, refresh_keys/2, add_provider/2]).
 -ignore_xref(?API).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2 | ?API]).
 
@@ -27,6 +28,10 @@ get_cached_keys(Provider) ->
     ets:lookup(?ID_TOKEN_CACHE, Provider),
   #{exp_at => ExpAt, keys => Keys}.
 
+-spec refresh_keys(atom()) -> id_token_jwks:keys().
+refresh_keys(Provider) ->
+  refresh_keys(Provider, #{}).
+
 -spec refresh_keys(atom(), refresh_keys_opts()) -> id_token_jwks:keys().
 refresh_keys(Provider, Opts) ->
   gen_server:call(?SERVER, {refresh, Provider, Opts}).
@@ -45,12 +50,14 @@ init([]) ->
   case application:get_env(id_token, async_revalidate, false) of
     true ->
         lists:foreach(fun({Provider, _}) ->
-                          self() ! {refresh, Provider, #{}}
+                          self() ! {refresh, Provider}
                       end, Providers);
     false -> ok
   end,
   {ok, #{}}.
 
+handle_call({refresh, Provider}, _From, State) ->
+  {reply, maybe_refresh(Provider, #{}), State};
 handle_call({refresh, Provider, Opts}, _From, State) ->
   {reply, maybe_refresh(Provider, Opts), State}.
 
