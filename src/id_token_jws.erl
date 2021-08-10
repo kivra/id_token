@@ -1,7 +1,11 @@
 -module(id_token_jws).
 
--ignore_xref([generate_key_for/1, generate_key_for/2, sign/2, sign/3]).
--export([generate_key_for/1, generate_key_for/2, sign/2, sign/3, validate/2]).
+-define(API_CALLS,
+        [generate_key_for/1, generate_key_for/2,
+         sign/2, sign/3,
+         validate/1, validate/2]). 
+-ignore_xref(?API_CALLS).
+-export(?API_CALLS).
 
 -include_lib("jose/include/jose_jwt.hrl").
 -include_lib("jose/include/jose_jwk.hrl").
@@ -32,12 +36,23 @@ sign(Claims, JWK, JWS) ->
   {_Modules, JWTBin} = jose_jws:compact(JWT),
   JWTBin.
 
+-spec validate(binary()) ->
+                  {ok, map()} |
+                  {error, invalid_signature | expired | no_public_key_matches}.
+validate(IdToken) ->
+  Kid = extract_kid(IdToken),
+  case id_token_pubkeys_storage:get(Kid) of
+    {error, _} ->
+      {error, no_public_key_matches};
+    {ok, Key} ->
+      validate_exp(validate_signature(Key, IdToken))
+  end.
+
 -spec validate(binary(), [map()]) ->
                   {ok, map()} |
                   {error, invalid_signature | expired | no_public_key_matches}.
 validate(IdToken, Keys) ->
-  Protected = jose_jwt:peek_protected(IdToken),
-  {_M, #{<<"kid">> := Kid}} = jose_jws:to_map(Protected),
+  Kid = extract_kid(IdToken),
   SearchResult = lists:search(fun(#{<<"kid">> := OtherKid}) ->
                                   OtherKid =:= Kid
                               end, Keys),
@@ -104,6 +119,11 @@ kid(_) -> jose_base64url:encode(crypto:strong_rand_bytes(16)).
 
 iat(#{iat := Iat}) -> Iat;
 iat(_) -> erlang:system_time(seconds).
+
+extract_kid(IdToken) ->
+  Protected = jose_jwt:peek_protected(IdToken),
+  {_M, #{<<"kid">> := Kid}} = jose_jws:to_map(Protected),
+  Kid.
 
 %%%_* Emacs ====================================================================
 %%% Local Variables:
