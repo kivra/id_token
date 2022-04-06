@@ -95,8 +95,8 @@ refresh(Provider) ->
   refresh(Provider, WellKnownUri).
 
 refresh(Provider, WellKnownUri) ->
-  {ok, KeysUrl} = id_token_jwks:get_jwks_uri(WellKnownUri),
-  {ok, NewKeys} = id_token_jwks:get_pub_keys(KeysUrl),
+  {ok, KeysUrl} = id_token_jwks:get_jwks_uri(Provider, WellKnownUri),
+  {ok, NewKeys} = id_token_jwks:get_pub_keys(Provider, KeysUrl),
   NewCacheEntry = NewKeys#{well_known_uri => WellKnownUri},
   ets:insert(?ID_TOKEN_CACHE, {Provider, NewCacheEntry}),
   NewKeys.
