@@ -1,6 +1,5 @@
 {"1.2.0",
-[{<<"base64url">>,{pkg,<<"base64url">>,<<"0.0.1">>},1},
- {<<"certifi">>,{pkg,<<"certifi">>,<<"2.5.3">>},1},
+[{<<"certifi">>,{pkg,<<"certifi">>,<<"2.5.3">>},1},
  {<<"hackney">>,
   {git,"https://github.com/benoitc/hackney.git",
        {ref,"f642ee0eccaff9aa15707ae3a3effa29f2920e41"}},
@@ -8,7 +7,7 @@
  {<<"idna">>,{pkg,<<"idna">>,<<"6.1.1">>},1},
  {<<"jose">>,
   {git,"https://github.com/potatosalad/erlang-jose.git",
-       {ref,"090a2ed054304ecc012d6c2d9d10d2a294d835b1"}},
+       {ref,"e0110a1afacde3011c8bb2a6f1c4ab9ea94bd4f4"}},
   0},
  {<<"jsx">>,
   {git,"https://github.com/talentdeficit/jsx.git",
@@ -21,7 +20,6 @@
  {<<"unicode_util_compat">>,{pkg,<<"unicode_util_compat">>,<<"0.7.0">>},1}]}.
 [
 {pkg_hash,[
- {<<"base64url">>, <<"36A90125F5948E3AFD7BE97662A1504B934DD5DAC78451CA6E9ABF85A10286BE">>},
  {<<"certifi">>, <<"70BDD7E7188C804F3A30EE0E7C99655BC35D8AC41C23E12325F36AB449B70651">>},
  {<<"idna">>, <<"8A63070E9F7D0C62EB9D9FCB360A7DE382448200FBBD1B106CC96D3D8099DF8D">>},
  {<<"metrics">>, <<"25F094DEA2CDA98213CECC3AEFF09E940299D950904393B2A29D191C346A8486">>},
@@ -30,7 +28,6 @@
  {<<"ssl_verify_fun">>, <<"CF344F5692C82D2CD7554F5EC8FD961548D4FD09E7D22F5B62482E5AEAEBD4B0">>},
  {<<"unicode_util_compat">>, <<"BC84380C9AB48177092F43AC89E4DFA2C6D62B40B8BD132B1059ECC7232F9A78">>}]},
 {pkg_hash_ext,[
- {<<"base64url">>, <<"FAB09B20E3F5DB886725544CBCF875B8E73EC93363954EB8A1A9ED834AA8C1F9">>},
  {<<"certifi">>, <<"ED516ACB3929B101208A9D700062D520F3953DA3B6B918D866106FFA980E1C10">>},
  {<<"idna">>, <<"92376EB7894412ED19AC475E4A86F7B413C1B9FBB5BD16DCCD57934157944CEA">>},
  {<<"metrics">>, <<"69B09ADDDC4F74A40716AE54D140F93BEB0FB8978D8636EADED0C31B6F099F16">>},
