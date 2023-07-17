@@ -28,11 +28,12 @@ get_cached_keys(Provider) ->
     ets:lookup(?ID_TOKEN_CACHE, Provider),
   #{exp_at => ExpAt, keys => Keys}.
 
--spec refresh_keys(atom()) -> id_token_jwks:keys().
+-spec refresh_keys(atom()) -> {ok, id_token_jwks:keys()} | {error, term()}.
 refresh_keys(Provider) ->
   refresh_keys(Provider, #{}).
 
--spec refresh_keys(atom(), refresh_keys_opts()) -> id_token_jwks:keys().
+-spec refresh_keys(atom(), refresh_keys_opts()) -> {ok, id_token_jwks:keys()} |
+                                                   {error, term()}.
 refresh_keys(Provider, Opts) ->
   gen_server:call(?SERVER, {refresh, Provider, Opts}).
 
@@ -65,19 +66,27 @@ handle_cast(_Request, State) ->
   {noreply, State}.
 
 handle_info({refresh, Provider}, State) ->
-  #{exp_at := ExpAt} = refresh(Provider),
-  Now = id_token_util:now_gregorian_seconds(),
-  RevalidateTime = ExpAt - ?REVALIDATE_DELAY,
-  case Now < RevalidateTime of
-    true ->
-      timer:send_after((RevalidateTime - Now) * 1000,
-                       self(), {refresh, Provider});
-    false ->
-      %% Not enough time for revalidation,
-      %% let the first request pay the price
-      ok
-  end,
-  {noreply, State}.
+  case refresh(Provider) of
+    {ok, #{exp_at := ExpAt}} ->
+      Now = id_token_util:now_gregorian_seconds(),
+      RevalidateTime = ExpAt - ?REVALIDATE_DELAY,
+      case Now < RevalidateTime of
+        true ->
+          timer:send_after((RevalidateTime - Now) * 1000,
+                          self(), {refresh, Provider});
+        false ->
+          %% Not enough time for revalidation,
+          %% let the first request pay the price
+          ok
+      end,
+      {noreply, set_refresh_error_count(0, State)};
+    {error, _Reason} ->
+      NewErrorCount = get_refresh_error_count(State) + 1,
+      MaxBackoff    = application:get_env(id_token, max_backoff, 60_000),
+      Backoff       = lists:max([NewErrorCount * 10_000, MaxBackoff]),
+      timer:send_after(Backoff, self(), {refresh, Provider}),
+      {noreply, set_refresh_error_count(NewErrorCount, State)}
+  end.
 
 maybe_refresh(Provider, #{force_refresh := true}) ->
   refresh(Provider);
@@ -85,7 +94,7 @@ maybe_refresh(Provider, _Opts) ->
   [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
   #{exp_at := ExpAt, well_known_uri := WellKnownUri} = CacheEntry,
   case ExpAt > id_token_util:now_gregorian_seconds() of
-    true -> CacheEntry;
+    true -> {ok, CacheEntry};
     false -> refresh(Provider, WellKnownUri)
   end.
 
@@ -96,10 +105,14 @@ refresh(Provider) ->
 
 refresh(Provider, WellKnownUri) ->
   {ok, KeysUrl} = id_token_jwks:get_jwks_uri(WellKnownUri),
-  {ok, NewKeys} = id_token_jwks:get_pub_keys(KeysUrl),
-  NewCacheEntry = NewKeys#{well_known_uri => WellKnownUri},
-  ets:insert(?ID_TOKEN_CACHE, {Provider, NewCacheEntry}),
-  NewKeys.
+  case id_token_jwks:get_pub_keys(KeysUrl) of
+    {ok, NewKeys} ->
+      NewCacheEntry = NewKeys#{well_known_uri => WellKnownUri},
+      ets:insert(?ID_TOKEN_CACHE, {Provider, NewCacheEntry}),
+      {ok, NewKeys};
+    {error, Reason} ->
+      {error, Reason}
+  end.
 
 %%%===================================================================
 %%% Internal functions
@@ -111,6 +124,12 @@ add_provider({Name, Uri}) ->
                      }},
   true = ets:insert(?ID_TOKEN_CACHE, EtsEntry),
   ok.
+
+set_refresh_error_count(Count, State) ->
+  maps:put(refresh_errors, Count, State).
+
+get_refresh_error_count(State) ->
+  maps:get(refresh_errors, State, 0).
 
 %%%_* Emacs ============================================================
 %%% Local Variables:
