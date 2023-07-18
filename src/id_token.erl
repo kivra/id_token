@@ -16,8 +16,8 @@ validate(Provider, IdToken) ->
     true  ->
       case id_token_jws:validate(IdToken, Keys) of
         {error, no_public_key_matches} ->
-          refresh_and_validate(Provider, IdToken,
-                               #{force_refresh => true});
+          Kid = id_token_jws:extract_kid(IdToken),
+          refresh_and_validate(Provider, IdToken, #{kid => Kid});
         Result ->
           Result
       end;

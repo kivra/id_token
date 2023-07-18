@@ -2,6 +2,8 @@
 
 -behaviour(gen_server).
 
+-include_lib("kernel/include/logger.hrl").
+
 %% API
 -define(API, [start_link/0, get_cached_keys/1,
               refresh_keys/1, refresh_keys/2, add_provider/2]).
@@ -14,7 +16,7 @@
 
 -define(REVALIDATE_DELAY, 7).
 
--type refresh_keys_opts() :: #{force_refresh => boolean()}.
+-type refresh_keys_opts() :: #{ kid => binary(), force_refresh => boolean() }.
 
 %%%===================================================================
 %%% API
@@ -68,19 +70,29 @@ handle_info({refresh, Provider}, State) ->
   #{exp_at := ExpAt} = refresh(Provider),
   Now = id_token_util:now_gregorian_seconds(),
   RevalidateTime = ExpAt - ?REVALIDATE_DELAY,
-  case Now < RevalidateTime of
-    true ->
-      timer:send_after((RevalidateTime - Now) * 1000,
-                       self(), {refresh, Provider});
-    false ->
-      %% Not enough time for revalidation,
-      %% let the first request pay the price
-      ok
-  end,
+  Delay =
+    case Now < RevalidateTime of
+      true ->
+        (RevalidateTime - Now) * 1000;
+      false ->
+        %% Not enough time for revalidation, let the first request pay
+        %% the price and re-initiate async_revalidate-loop after 60 seconds
+        60_000
+    end,
+  timer:send_after(Delay, self(), {refresh, Provider}),
   {noreply, State}.
 
 maybe_refresh(Provider, #{force_refresh := true}) ->
   refresh(Provider);
+maybe_refresh(Provider, #{kid := Kid}) ->
+  %% check whether Kid has been added to the cache already while the
+  %% refresh request was queued in the gen_server inbox
+  [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
+  #{keys := Keys}          = CacheEntry,
+  case lists:search(fun(#{<<"kid">> := K}) -> K =:= Kid end, Keys) of
+    {value, _} -> CacheEntry;
+    false      -> refresh(Provider)
+  end;
 maybe_refresh(Provider, _Opts) ->
   [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
   #{exp_at := ExpAt, well_known_uri := WellKnownUri} = CacheEntry,
@@ -95,11 +107,19 @@ refresh(Provider) ->
   refresh(Provider, WellKnownUri).
 
 refresh(Provider, WellKnownUri) ->
-  {ok, KeysUrl} = id_token_jwks:get_jwks_uri(WellKnownUri),
-  {ok, NewKeys} = id_token_jwks:get_pub_keys(KeysUrl),
-  NewCacheEntry = NewKeys#{well_known_uri => WellKnownUri},
-  ets:insert(?ID_TOKEN_CACHE, {Provider, NewCacheEntry}),
-  NewKeys.
+  case id_token_jwks:get_jwks_uri(WellKnownUri) of
+    {ok, KeysUrl} ->
+      case id_token_jwks:get_pub_keys(KeysUrl) of
+        {ok, NewKeys} ->
+          NewCacheEntry = NewKeys#{well_known_uri => WellKnownUri},
+          ets:insert(?ID_TOKEN_CACHE, {Provider, NewCacheEntry}),
+          NewKeys;
+        {error, Reason} ->
+          handle_error("failed to refresh pubkey cache", Provider, Reason)
+      end;
+    {error, Reason} ->
+      handle_error("failed to fetch jwks uri", Provider, Reason)
+  end.
 
 %%%===================================================================
 %%% Internal functions
@@ -111,6 +131,13 @@ add_provider({Name, Uri}) ->
                      }},
   true = ets:insert(?ID_TOKEN_CACHE, EtsEntry),
   ok.
+
+handle_error(Message, Provider, Reason) ->
+  ?LOG_ERROR(#{ message => Message,
+                reason => Reason,
+                provider => Provider }),
+  [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
+  CacheEntry.
 
 %%%_* Emacs ============================================================
 %%% Local Variables:
