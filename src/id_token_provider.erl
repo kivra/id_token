@@ -87,9 +87,11 @@ maybe_refresh(Provider, #{force_refresh := true}) ->
 maybe_refresh(Provider, #{kid := Kid}) ->
   %% check whether Kid has been added to the cache already while the
   %% refresh request was queued in the gen_server inbox
-  case cache_has_kid(Kid, Provider) of
-    {true, CacheEntry} -> CacheEntry;
-    {false, _}         -> refresh(Provider)
+  [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
+  #{keys := Keys}          = CacheEntry,
+  case lists:search(fun(#{<<"kid">> := K}) -> K =:= Kid end, Keys) of
+    {value, _} -> CacheEntry;
+    false      -> refresh(Provider)
   end;
 maybe_refresh(Provider, _Opts) ->
   [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
@@ -136,14 +138,6 @@ handle_error(Message, Provider, Reason) ->
                 provider => Provider }),
   [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
   CacheEntry.
-
-cache_has_kid(Kid, Provider) ->
-  [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
-  #{keys := Keys}          = CacheEntry,
-  case lists:search(fun(#{<<"kid">> := K}) -> K =:= Kid end, Keys) of
-    {value, _} -> {true, CacheEntry};
-    false      -> {false, CacheEntry}
-  end.
 
 %%%_* Emacs ============================================================
 %%% Local Variables:
