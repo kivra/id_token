@@ -98,17 +98,18 @@ refresh(Provider) ->
   refresh(Provider, WellKnownUri).
 
 refresh(Provider, WellKnownUri) ->
-  {ok, KeysUrl} = id_token_jwks:get_jwks_uri(WellKnownUri),
-  case id_token_jwks:get_pub_keys(KeysUrl) of
-    {ok, NewKeys} ->
-      NewCacheEntry = NewKeys#{well_known_uri => WellKnownUri},
-      ets:insert(?ID_TOKEN_CACHE, {Provider, NewCacheEntry}),
-      NewKeys;
+  case id_token_jwks:get_jwks_uri(WellKnownUri) of
+    {ok, KeysUrl} ->
+      case id_token_jwks:get_pub_keys(KeysUrl) of
+        {ok, NewKeys} ->
+          NewCacheEntry = NewKeys#{well_known_uri => WellKnownUri},
+          ets:insert(?ID_TOKEN_CACHE, {Provider, NewCacheEntry}),
+          NewKeys;
+        {error, Reason} ->
+          handle_error("failed to refresh pubkey cache", Provider, Reason)
+      end;
     {error, Reason} ->
-      ?LOG_ERROR(#{ message => "failed to refresh pubkey cache",
-                    reason => Reason }),
-      [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
-      CacheEntry
+      handle_error("failed to fetch jwks uri", Provider, Reason)
   end.
 
 %%%===================================================================
@@ -121,6 +122,13 @@ add_provider({Name, Uri}) ->
                      }},
   true = ets:insert(?ID_TOKEN_CACHE, EtsEntry),
   ok.
+
+handle_error(Message, Provider, Reason) ->
+  ?LOG_ERROR(#{ message => Message,
+                reason => Reason,
+                provider => Provider }),
+  [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
+  CacheEntry.
 
 %%%_* Emacs ============================================================
 %%% Local Variables:
