@@ -66,19 +66,27 @@ handle_cast(_Request, State) ->
   {noreply, State}.
 
 handle_info({refresh, Provider}, State) ->
-  {ok, #{exp_at := ExpAt}} = refresh(Provider),
-  Now = id_token_util:now_gregorian_seconds(),
-  RevalidateTime = ExpAt - ?REVALIDATE_DELAY,
-  case Now < RevalidateTime of
-    true ->
-      timer:send_after((RevalidateTime - Now) * 1000,
-                       self(), {refresh, Provider});
-    false ->
-      %% Not enough time for revalidation,
-      %% let the first request pay the price
-      ok
-  end,
-  {noreply, State}.
+  case refresh(Provider) of
+    {ok, #{exp_at := ExpAt}} ->
+      Now = id_token_util:now_gregorian_seconds(),
+      RevalidateTime = ExpAt - ?REVALIDATE_DELAY,
+      case Now < RevalidateTime of
+        true ->
+          timer:send_after((RevalidateTime - Now) * 1000,
+                          self(), {refresh, Provider});
+        false ->
+          %% Not enough time for revalidation,
+          %% let the first request pay the price
+          ok
+      end,
+      {noreply, set_refresh_error_count(0, State)};
+    {error, _Reason} ->
+      NewErrorCount = get_refresh_error_count(State) + 1,
+      MaxBackoff    = application:get_env(id_token, max_backoff, 60_000),
+      Backoff       = lists:max([NewErrorCount * 10_000, MaxBackoff]),
+      timer:send_after(Backoff, self(), {refresh, Provider}),
+      {noreply, set_refresh_error_count(NewErrorCount, State)}
+  end.
 
 maybe_refresh(Provider, #{force_refresh := true}) ->
   refresh(Provider);
@@ -116,6 +124,12 @@ add_provider({Name, Uri}) ->
                      }},
   true = ets:insert(?ID_TOKEN_CACHE, EtsEntry),
   ok.
+
+set_refresh_error_count(Count, State) ->
+  maps:put(refresh_errors, Count, State).
+
+get_refresh_error_count(State) ->
+  maps:get(refresh_errors, State, 0).
 
 %%%_* Emacs ============================================================
 %%% Local Variables:
