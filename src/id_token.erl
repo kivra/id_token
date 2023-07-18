@@ -7,8 +7,7 @@
 -spec validate(atom(), binary()) -> {ok, map()} |
                                     {error, invalid_signature |
                                             expired |
-                                            no_public_key_matches |
-                                            term()
+                                            no_public_key_matches
                                     }.
 validate(Provider, IdToken) ->
   #{exp_at := ExpAt, keys := Keys} =
@@ -36,12 +35,9 @@ refresh_and_validate(Provider, IdToken) ->
   refresh_and_validate(Provider, IdToken, #{}).
 
 refresh_and_validate(Provider, IdToken, Opts) ->
-  case id_token_provider:refresh_keys(Provider, Opts) of
-    {ok, #{keys := FreshKeys}} ->
-      id_token_jws:validate(IdToken, FreshKeys);
-    {error, Reason} ->
-      {error, Reason}
-  end.
+  #{keys := FreshKeys} =
+    id_token_provider:refresh_keys(Provider, Opts),
+  id_token_jws:validate(IdToken, FreshKeys).
 
 %%%_* Emacs ============================================================
 %%% Local Variables:

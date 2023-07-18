@@ -2,6 +2,8 @@
 
 -behaviour(gen_server).
 
+-include_lib("kernel/include/logger.hrl").
+
 %% API
 -define(API, [start_link/0, get_cached_keys/1,
               refresh_keys/1, refresh_keys/2, add_provider/2]).
@@ -28,12 +30,11 @@ get_cached_keys(Provider) ->
     ets:lookup(?ID_TOKEN_CACHE, Provider),
   #{exp_at => ExpAt, keys => Keys}.
 
--spec refresh_keys(atom()) -> {ok, id_token_jwks:keys()} | {error, term()}.
+-spec refresh_keys(atom()) -> id_token_jwks:keys().
 refresh_keys(Provider) ->
   refresh_keys(Provider, #{}).
 
--spec refresh_keys(atom(), refresh_keys_opts()) -> {ok, id_token_jwks:keys()} |
-                                                   {error, term()}.
+-spec refresh_keys(atom(), refresh_keys_opts()) -> id_token_jwks:keys().
 refresh_keys(Provider, Opts) ->
   gen_server:call(?SERVER, {refresh, Provider, Opts}).
 
@@ -66,27 +67,20 @@ handle_cast(_Request, State) ->
   {noreply, State}.
 
 handle_info({refresh, Provider}, State) ->
-  case refresh(Provider) of
-    {ok, #{exp_at := ExpAt}} ->
-      Now = id_token_util:now_gregorian_seconds(),
-      RevalidateTime = ExpAt - ?REVALIDATE_DELAY,
-      case Now < RevalidateTime of
-        true ->
-          timer:send_after((RevalidateTime - Now) * 1000,
-                          self(), {refresh, Provider});
-        false ->
-          %% Not enough time for revalidation,
-          %% let the first request pay the price
-          ok
-      end,
-      {noreply, set_refresh_error_count(0, State)};
-    {error, _Reason} ->
-      NewErrorCount = get_refresh_error_count(State) + 1,
-      MaxBackoff    = application:get_env(id_token, max_backoff, 60_000),
-      Backoff       = lists:max([NewErrorCount * 10_000, MaxBackoff]),
-      timer:send_after(Backoff, self(), {refresh, Provider}),
-      {noreply, set_refresh_error_count(NewErrorCount, State)}
-  end.
+  #{exp_at := ExpAt} = refresh(Provider),
+  Now = id_token_util:now_gregorian_seconds(),
+  RevalidateTime = ExpAt - ?REVALIDATE_DELAY,
+  Delay =
+    case Now < RevalidateTime of
+      true ->
+        (RevalidateTime - Now) * 1000;
+      false ->
+        %% Not enough time for revalidation, let the first request pay
+        %% the price and re-initiate async_revalidate-loop after 60 seconds
+        60_000
+    end,
+  timer:send_after(Delay, self(), {refresh, Provider}),
+  {noreply, State}.
 
 maybe_refresh(Provider, #{force_refresh := true}) ->
   refresh(Provider);
@@ -94,7 +88,7 @@ maybe_refresh(Provider, _Opts) ->
   [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
   #{exp_at := ExpAt, well_known_uri := WellKnownUri} = CacheEntry,
   case ExpAt > id_token_util:now_gregorian_seconds() of
-    true -> {ok, CacheEntry};
+    true -> CacheEntry;
     false -> refresh(Provider, WellKnownUri)
   end.
 
@@ -109,9 +103,12 @@ refresh(Provider, WellKnownUri) ->
     {ok, NewKeys} ->
       NewCacheEntry = NewKeys#{well_known_uri => WellKnownUri},
       ets:insert(?ID_TOKEN_CACHE, {Provider, NewCacheEntry}),
-      {ok, NewKeys};
+      NewKeys;
     {error, Reason} ->
-      {error, Reason}
+      ?LOG_ERROR(#{ message => "failed to refresh pubkey cache",
+                    reason => Reason }),
+      [{Provider, CacheEntry}] = ets:lookup(?ID_TOKEN_CACHE, Provider),
+      CacheEntry
   end.
 
 %%%===================================================================
@@ -124,12 +121,6 @@ add_provider({Name, Uri}) ->
                      }},
   true = ets:insert(?ID_TOKEN_CACHE, EtsEntry),
   ok.
-
-set_refresh_error_count(Count, State) ->
-  maps:put(refresh_errors, Count, State).
-
-get_refresh_error_count(State) ->
-  maps:get(refresh_errors, State, 0).
 
 %%%_* Emacs ============================================================
 %%% Local Variables:
