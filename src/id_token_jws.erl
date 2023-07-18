@@ -3,7 +3,8 @@
 -define(API_CALLS,
         [generate_key_for/1, generate_key_for/2,
          sign/2, sign/3,
-         validate/1, validate/2]). 
+         validate/1, validate/2,
+         extract_kid/1]). 
 -ignore_xref(?API_CALLS).
 -export(?API_CALLS).
 
@@ -78,6 +79,11 @@ generate_key_for(Alg, Options) ->
   {_, PublicKeyMap} = jose_jwk:to_public_map(Jwk),
   {Jwk, PublicKeyMap}.
 
+extract_kid(IdToken) ->
+  Protected = jose_jwt:peek_protected(IdToken),
+  {_M, #{<<"kid">> := Kid}} = jose_jws:to_map(Protected),
+  Kid.
+
 %%%=============================================================================
 %%% Internal functions
 %%%=============================================================================
@@ -119,11 +125,6 @@ kid(_) -> jose_base64url:encode(crypto:strong_rand_bytes(16)).
 
 iat(#{iat := Iat}) -> Iat;
 iat(_) -> erlang:system_time(seconds).
-
-extract_kid(IdToken) ->
-  Protected = jose_jwt:peek_protected(IdToken),
-  {_M, #{<<"kid">> := Kid}} = jose_jws:to_map(Protected),
-  Kid.
 
 %%%_* Emacs ====================================================================
 %%% Local Variables:
