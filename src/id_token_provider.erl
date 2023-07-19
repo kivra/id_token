@@ -76,8 +76,8 @@ handle_info({refresh, Provider}, State) ->
         (RevalidateTime - Now) * 1000;
       false ->
         %% Not enough time for revalidation, let the first request pay
-        %% the price and re-initiate async_revalidate-loop after 60 seconds
-        60_000
+        %% the price and re-initiate async_revalidate-loop after 10 seconds
+        10_000
     end,
   timer:send_after(Delay, self(), {refresh, Provider}),
   {noreply, State}.
