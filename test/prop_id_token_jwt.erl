@@ -38,7 +38,7 @@ prop_valid_signature() ->
           end).
 
 prop_invalid_signature() ->
-  ?FORALL({{Jwk, _PublicKeyMap}, {OtherJwk, OtherPublicKeyMap}, Claims},
+  ?FORALL({{Jwk, PublicKeyMap}, {OtherJwk, OtherPublicKeyMap}, Claims},
           {key_pair(), key_pair(), jwt_claims()},
           begin
             #jose_jwk{fields = OtherFields} = OtherJwk,
@@ -49,7 +49,7 @@ prop_invalid_signature() ->
           end).
 
 prop_no_matching_key() ->
-  ?FORALL({[{Jwk, _PublicKeyMap} | OtherKeys], Claims},
+  ?FORALL({[{Jwk, PublicKeyMap} | OtherKeys], Claims},
           {non_empty(list(key_pair())), jwt_claims()},
           begin
             Jwt = id_token_jws:sign(Claims, Jwk),
