@@ -27,7 +27,7 @@ prop_test() ->
             {History, State, Result} = run_commands(?MODULE, Cmds),
             id_token_sign:stop(),
             ?WHENFAIL(io:format("History: ~p\nState: ~p\nResult: ~p\n",
-                                [History,State,Result]),
+                                [History, State, Result]),
                       aggregate(command_names(Cmds), Result =:= ok))
           end).
 

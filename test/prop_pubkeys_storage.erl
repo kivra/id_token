@@ -23,7 +23,7 @@ prop_test() ->
             {History, State, Result} = run_commands(?MODULE, Cmds),
             id_token_pubkeys_storage:stop(),
             ?WHENFAIL(io:format("History: ~p\nState: ~p\nResult: ~p\n",
-                                [History,State,Result]),
+                                [History, State, Result]),
                       aggregate(command_names(Cmds), Result =:= ok))
           end).
 
@@ -37,9 +37,9 @@ initial_state() ->
 %% @doc List of possible commands to run against the system
 command(_State) ->
   frequency([{1, {call, id_token_pubkeys_storage, get_all, []}},
-             {1, {call, id_token_pubkeys_storage, get,[kid()]}},
-             {3, {call, id_token_pubkeys_storage, put,[key()]}},
-             {1, {call, id_token_pubkeys_storage, delete,[kid()]}}
+             {1, {call, id_token_pubkeys_storage, get, [kid()]}},
+             {3, {call, id_token_pubkeys_storage, put, [key()]}},
+             {1, {call, id_token_pubkeys_storage, delete, [kid()]}}
             ]).
 
 %% @doc Determines whether a command should be valid under the
@@ -84,7 +84,7 @@ key() ->
        end).
 
 kid() ->
-  ?LET(Int, integer(1,10), integer_to_binary(Int)).
+  ?LET(Int, integer(1, 10), integer_to_binary(Int)).
 
 %%%_* Emacs ============================================================
 %%% Local Variables:
