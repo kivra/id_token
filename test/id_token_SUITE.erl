@@ -19,26 +19,26 @@ init_per_suite(Config) ->
 end_per_suite(_Config) -> ok.
 
 init_per_testcase(_TestCase, Config) ->
-  {Jwk, PublicKeyMap} =
+  {JWK, PublicKeyMap} =
     id_token_jws:generate_key_for(<<"RS256">>, #{key_size => 1024}),
   Claims = #{ <<"exp">> => erlang:system_time(second) + 10},
-  Jwt = id_token_jws:sign(Claims, Jwk),
+  JWT = id_token_jws:sign(Claims, JWK),
   mock_id_provider(PublicKeyMap, 0),
   application:ensure_all_started(id_token),
-  [{jwt, Jwt}, {pubkeys, [PublicKeyMap]} | Config].
+  [{jwt, JWT}, {pubkeys, [PublicKeyMap]} | Config].
 end_per_testcase(_TestCase, Config) ->
   application:stop(id_token),
   meck:unload([id_token_jwks, hackney]),
   Config.
 
 validate_jwt(Config) ->
-  Jwt = ?config(jwt, Config),
-  ?assertMatch({ok, _}, id_token:validate(?ID_PROVIDER, Jwt)).
+  JWT = ?config(jwt, Config),
+  ?assertMatch({ok, _}, id_token:validate(?ID_PROVIDER, JWT)).
 
 keys_are_cached(Config) ->
-  Jwt = ?config(jwt, Config),
-  ?assertMatch({ok, _}, id_token:validate(?ID_PROVIDER, Jwt)),
-  ?assertMatch({ok, _}, id_token:validate(?ID_PROVIDER, Jwt)),
+  JWT = ?config(jwt, Config),
+  ?assertMatch({ok, _}, id_token:validate(?ID_PROVIDER, JWT)),
+  ?assertMatch({ok, _}, id_token:validate(?ID_PROVIDER, JWT)),
   1 = meck:num_calls(id_token_jwks, get_pub_keys, 1),
   ok.
 
@@ -49,9 +49,9 @@ keys_are_only_refreshed_once_per_kid(Config) ->
   ok = meck:expect(id_token_provider, get_cached_keys, 1, CurrentKeyCache),
 
   %% create JWT with kid that's not yet in the pubkey cache
-  {Jwk, NewPubkey} = id_token_jws:generate_key_for(<<"RS256">>, #{key_size => 1024}),
+  {JWK, NewPubkey} = id_token_jws:generate_key_for(<<"RS256">>, #{key_size => 1024}),
   Claims = #{ <<"exp">> => erlang:system_time(second) + 10 },
-  Jwt = id_token_jws:sign(Claims, Jwk),
+  JWT = id_token_jws:sign(Claims, JWK),
 
   %% set up provider to return new pubkeys with a 50 ms delay
   HttpReponseDelay = 50,
@@ -59,14 +59,14 @@ keys_are_only_refreshed_once_per_kid(Config) ->
   ?assertEqual(0, meck:num_calls(id_token_jwks, get_pub_keys, 1)),
 
   %% try to validate multiple JWTs based on kid that's not yet in the key cache
-  spawn(fun() -> id_token:validate(?ID_PROVIDER, Jwt) end),
-  spawn(fun() -> id_token:validate(?ID_PROVIDER, Jwt) end),
-  spawn(fun() -> id_token:validate(?ID_PROVIDER, Jwt) end),
+  spawn(fun() -> id_token:validate(?ID_PROVIDER, JWT) end),
+  spawn(fun() -> id_token:validate(?ID_PROVIDER, JWT) end),
+  spawn(fun() -> id_token:validate(?ID_PROVIDER, JWT) end),
   timer:sleep(10 * HttpReponseDelay),
 
   %% ensure that the pubkey cache was only refreshed once
   ?assertEqual(1, meck:num_calls(id_token_jwks, get_pub_keys, 1)),
-  ?assertMatch({ok, _}, id_token:validate(?ID_PROVIDER, Jwt)),
+  ?assertMatch({ok, _}, id_token:validate(?ID_PROVIDER, JWT)),
 
   meck:unload([id_token_provider]).
 

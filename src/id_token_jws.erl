@@ -4,7 +4,7 @@
         [generate_key_for/1, generate_key_for/2,
          sign/2, sign/3,
          validate/1, validate/2,
-         extract_kid/1]). 
+         extract_kid/1]).
 -ignore_xref(?API_CALLS).
 -export(?API_CALLS).
 
@@ -72,12 +72,12 @@ generate_key_for(Alg, Options) ->
           <<"ES", _S/binary>> -> generate_ec_key(Alg, Options);
           _ -> generate_rsa_key(Alg, Options)
         end,
-  Jwk0 = jose_jwk:from_key(Key),
-  Jwk = Jwk0#jose_jwk{fields = #{<<"kid">> => kid(Options),
+  JWK0 = jose_jwk:from_key(Key),
+  JWK = JWK0#jose_jwk{fields = #{<<"kid">> => kid(Options),
                                  <<"use">> => <<"sig">>,
                                  <<"iat">> => iat(Options)}},
-  {_, PublicKeyMap} = jose_jwk:to_public_map(Jwk),
-  {Jwk, PublicKeyMap}.
+  {_, PublicKeyMap} = jose_jwk:to_public_map(JWK),
+  {JWK, PublicKeyMap}.
 
 extract_kid(IdToken) ->
   Protected = jose_jwt:peek_protected(IdToken),
@@ -91,7 +91,7 @@ extract_kid(IdToken) ->
 
 validate_signature(Key, IdToken) ->
   case jose_jwt:verify(Key, IdToken) of
-    {true, #jose_jwt{fields = Claims}, _Jws} ->
+    {true, #jose_jwt{fields = Claims}, _JWS} ->
       {ok, Claims};
     {false, _, _} ->
       {error, invalid_signature}

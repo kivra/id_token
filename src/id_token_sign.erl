@@ -75,8 +75,8 @@ handle_info(_Request, Timers0) ->
 %%% Internal functions
 %%%===================================================================
 put_key_for(Alg, Options) ->
-  {Jwk, PublicKeyMap} = id_token_jws:generate_key_for(Alg, Options),
-  SignKeyFun = fun() -> Jwk end,
+  {JWK, PublicKeyMap} = id_token_jws:generate_key_for(Alg, Options),
+  SignKeyFun = fun() -> JWK end,
   #{<<"kid">> := Kid, <<"iat">> := Iat} = PublicKeyMap,
   TTU = maps:get(ttu, Options, ?TTU),
   Exp = Iat + TTU,
