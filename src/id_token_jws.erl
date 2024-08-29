@@ -4,7 +4,7 @@
         [generate_key_for/1, generate_key_for/2,
          sign/2, sign/3,
          validate/1, validate/2,
-         extract_kid/1]). 
+         extract_kid/1]).
 -ignore_xref(?API_CALLS).
 -export(?API_CALLS).
 
