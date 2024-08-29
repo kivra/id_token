@@ -33,8 +33,8 @@ get_pub_keys(Uri) ->
 get_jwks_uri(Uri) ->
   case hackney:request(get, Uri, [], <<>>, [with_body]) of
     {ok, 200, _Headers, Body} ->
-      #{<<"jwks_uri">> := JwksUri} = jsx:decode(Body, [return_maps]),
-      {ok, JwksUri};
+      #{<<"jwks_uri">> := JWKSUri} = jsx:decode(Body, [return_maps]),
+      {ok, JWKSUri};
     {ok, _, _, _} ->
       {error, service_unavailable};
     {error, Reason} ->

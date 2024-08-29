@@ -26,36 +26,36 @@ eunit_test_() ->
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
 prop_valid_signature() ->
-  ?FORALL({{Jwk, PublicKeyMap}, Claims},
+  ?FORALL({{JWK, PublicKeyMap}, Claims},
           {key_pair(), jwt_claims()},
           begin
             #{<<"exp">> := Exp} = Claims,
-            Jwt = id_token_jws:sign(Claims, Jwk),
-            Result = id_token_jws:validate(Jwt, [PublicKeyMap]),
+            JWT = id_token_jws:sign(Claims, JWK),
+            Result = id_token_jws:validate(JWT, [PublicKeyMap]),
             Exp =<  erlang:system_time(second)
               andalso {error, expired} =:= Result
               orelse {ok, Claims} =:= Result
           end).
 
 prop_invalid_signature() ->
-  ?FORALL({{Jwk, PublicKeyMap}, {OtherJwk, OtherPublicKeyMap}, Claims},
+  ?FORALL({{JWK, PublicKeyMap}, {OtherJWK, OtherPublicKeyMap}, Claims},
           {key_pair(), key_pair(), jwt_claims()},
           begin
-            #jose_jwk{fields = OtherFields} = OtherJwk,
-            JwkWithChangedKid = Jwk#jose_jwk{fields = OtherFields},
-            Jwt = id_token_jws:sign(Claims, JwkWithChangedKid),
+            #jose_jwk{fields = OtherFields} = OtherJWK,
+            JWKWithChangedKid = JWK#jose_jwk{fields = OtherFields},
+            JWT = id_token_jws:sign(Claims, JWKWithChangedKid),
             {error, invalid_signature}
-              =:= id_token_jws:validate(Jwt, [OtherPublicKeyMap])
+              =:= id_token_jws:validate(JWT, [OtherPublicKeyMap])
           end).
 
 prop_no_matching_key() ->
-  ?FORALL({[{Jwk, PublicKeyMap} | OtherKeys], Claims},
+  ?FORALL({[{JWK, PublicKeyMap} | OtherKeys], Claims},
           {non_empty(list(key_pair())), jwt_claims()},
           begin
-            Jwt = id_token_jws:sign(Claims, Jwk),
+            JWT = id_token_jws:sign(Claims, JWK),
             PublicKeys = lists:map(fun({_, Key}) -> Key end, OtherKeys),
             {error, no_public_key_matches}
-              =:= id_token_jws:validate(Jwt, PublicKeys)
+              =:= id_token_jws:validate(JWT, PublicKeys)
           end).
 
 %%%%%%%%%%%%%%%%%%

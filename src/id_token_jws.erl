@@ -72,8 +72,8 @@ generate_key_for(Alg, Options) ->
           <<"ES", _S/binary>> -> generate_ec_key(Alg, Options);
           _ -> generate_rsa_key(Alg, Options)
         end,
-  Jwk0 = jose_jwk:from_key(Key),
-  JWK = Jwk0#jose_jwk{fields = #{<<"kid">> => kid(Options),
+  JWK0 = jose_jwk:from_key(Key),
+  JWK = JWK0#jose_jwk{fields = #{<<"kid">> => kid(Options),
                                  <<"use">> => <<"sig">>,
                                  <<"iat">> => iat(Options)}},
   {_, PublicKeyMap} = jose_jwk:to_public_map(JWK),
