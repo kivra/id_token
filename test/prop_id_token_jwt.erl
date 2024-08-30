@@ -10,6 +10,8 @@
                <<"RS256">>, <<"RS384">>, <<"RS512">>,
                <<"ES256">>, <<"ES384">>, <<"ES512">>]).
 
+-elvis([{elvis_style, used_ignore_variable, disabled}]).
+
 %%%%%%%%%%%%%%%%%%%%
 %%% Eunit runner %%%
 %%%%%%%%%%%%%%%%%%%%
@@ -38,7 +40,7 @@ prop_valid_signature() ->
           end).
 
 prop_invalid_signature() ->
-  ?FORALL({{JWK, PublicKeyMap}, {OtherJWK, OtherPublicKeyMap}, Claims},
+  ?FORALL({{JWK, _PublicKeyMap}, {OtherJWK, OtherPublicKeyMap}, Claims},
           {key_pair(), key_pair(), jwt_claims()},
           begin
             #jose_jwk{fields = OtherFields} = OtherJWK,
@@ -49,7 +51,7 @@ prop_invalid_signature() ->
           end).
 
 prop_no_matching_key() ->
-  ?FORALL({[{JWK, PublicKeyMap} | OtherKeys], Claims},
+  ?FORALL({[{JWK, _PublicKeyMap} | OtherKeys], Claims},
           {non_empty(list(key_pair())), jwt_claims()},
           begin
             JWT = id_token_jws:sign(Claims, JWK),
