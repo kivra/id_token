@@ -34,7 +34,7 @@ put(#{<<"kid">> := Kid} = Key) ->
 
 %% gen_server callbacks
 init(A) ->
-  ets:new(?MODULE, ?ETS_OPTIONS),
+  ?MODULE = ets:new(?MODULE, ?ETS_OPTIONS),
   {ok, A}.
 handle_call(_, _, S) -> {noreply, S}.
 handle_cast(_, S) -> {noreply, S}.

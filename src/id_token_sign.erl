@@ -46,7 +46,7 @@ add_key_for(Alg, Options) ->
 %%%===================================================================
 init([]) ->
   id_token_pubkeys_storage:start(),
-  ets:new(?MODULE, ?ETS_OPTIONS),
+  ?MODULE = ets:new(?MODULE, ?ETS_OPTIONS),
   SignKeys = application:get_env(id_token, sign_keys, []),
   Timers = lists:sort([put_key_for(Alg, Opts) || {Alg, Opts} <- SignKeys]),
   {ok, Timers, timeout(Timers)}.

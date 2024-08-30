@@ -46,7 +46,7 @@ add_provider(Name, Uri) ->
 %%% gen_server callbacks
 %%%===================================================================
 init([]) ->
-  ets:new(?ID_TOKEN_CACHE, ?ETS_OPTIONS),
+  ?ID_TOKEN_CACHE = ets:new(?ID_TOKEN_CACHE, ?ETS_OPTIONS),
   Providers = id_token_jwks:get_providers(),
   lists:foreach(fun add_provider/1, Providers),
   case application:get_env(id_token, async_revalidate, false) of
@@ -79,7 +79,7 @@ handle_info({refresh, Provider}, State) ->
         %% the price and re-initiate async_revalidate-loop after 10 seconds
         10_000
     end,
-  timer:send_after(Delay, self(), {refresh, Provider}),
+  {ok, _} = timer:send_after(Delay, self(), {refresh, Provider}),
   {noreply, State}.
 
 maybe_refresh(Provider, #{force_refresh := true}) ->

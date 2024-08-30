@@ -28,7 +28,7 @@
 -define(call_callback(Args),
         begin
           Mod = ?BACKEND,
-          code:ensure_loaded(Mod),
+          _ = code:ensure_loaded(Mod),
           case erlang:function_exported(Mod, ?FUNCTION_NAME, ?FUNCTION_ARITY) of
             true -> erlang:apply(Mod, ?FUNCTION_NAME, Args);
             false -> {error, not_exported}
