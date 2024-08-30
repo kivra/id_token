@@ -10,7 +10,7 @@
                <<"RS256">>, <<"RS384">>, <<"RS512">>,
                <<"ES256">>, <<"ES384">>, <<"ES512">>]).
 
--elvis([{elvis_style, used_ignore_variable, disabled}]).
+-elvis([{elvis_style, used_ignored_variable, disable}]).
 
 %%%%%%%%%%%%%%%%%%%%
 %%% Eunit runner %%%
