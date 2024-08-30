@@ -11,12 +11,12 @@
 %%%%%%%%%%%%%%%%%%%%
 eunit_test_() ->
   Opts = [{numtests, 30}],
-  ?_assert(proper:quickcheck(prop_test(), Opts)).
+  ?_assert(proper:quickcheck(prop_test1(), Opts)).
 
 %%%%%%%%%%%%%%%%%%
 %%% PROPERTIES %%%
 %%%%%%%%%%%%%%%%%%
-prop_test() ->
+prop_test1() ->
   ?FORALL(Cmds, commands(?MODULE),
           begin
             id_token_pubkeys_storage:start(),
@@ -54,7 +54,7 @@ postcondition(State, {call, _Mod, get_all, _Args}, {ok, Res}) ->
   lists:sort(maps:values(State)) =:= lists:sort(Res);
 postcondition(State, {call, _Mod, get, [Kid]}, Res) ->
   case {maps:find(Kid, State), Res} of
-    {{ok, _V}, {ok, _V}} -> true;
+    {{ok, V}, {ok, V}} -> true;
     {error, {error, not_found}} -> true;
     _ -> false
   end;
