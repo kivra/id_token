@@ -15,12 +15,12 @@
 %%%%%%%%%%%%%%%%%%%%
 eunit_test_() ->
   Opts = [{numtests, 30}],
-  ?_assert(proper:quickcheck(prop_test(), Opts)).
+  ?_assert(proper:quickcheck(prop_test2(), Opts)).
 
 %%%%%%%%%%%%%%%%%%
 %%% PROPERTIES %%%
 %%%%%%%%%%%%%%%%%%
-prop_test() ->
+prop_test2() ->
   ?FORALL(Cmds, commands(?MODULE),
           begin
             id_token_sign:start_link(),
