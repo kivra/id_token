@@ -6,7 +6,7 @@ jobs:
 
   build_and_test:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     name: OTP ${{matrix.otp}}
     strategy:
@@ -33,7 +33,7 @@ jobs:
   release:
     if: github.ref == 'refs/heads/master' && startsWith(github.event.head_commit.message, 'no-release:') == false
     needs: build_and_test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - name: Bump version and push tag
       id: tag_version
