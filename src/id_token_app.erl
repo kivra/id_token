@@ -10,10 +10,10 @@
 -export([start/2, stop/1]).
 
 start(_StartType, _StartArgs) ->
-  id_token_sup:start_link().
+    id_token_sup:start_link().
 
 stop(_State) ->
-  ok.
+    ok.
 
 %%%_* Emacs ============================================================
 %%% Local Variables:

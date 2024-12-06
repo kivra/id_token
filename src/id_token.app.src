@@ -1,18 +1,18 @@
-{application, id_token,
- [{description, "An OTP application to validate Id tokens"},
-  {vsn, git},
-  {registered, []},
-  {mod, {id_token_app, []}},
-  {applications,
-   [kernel,
-    stdlib,
-    hackney,
-    jose,
-    jsx
-   ]},
-  {env,[]},
-  {modules, []},
+{application, id_token, [
+    {description, "An OTP application to validate Id tokens"},
+    {vsn, git},
+    {registered, []},
+    {mod, {id_token_app, []}},
+    {applications, [
+        kernel,
+        stdlib,
+        hackney,
+        jose,
+        jsx
+    ]},
+    {env, []},
+    {modules, []},
 
-  {licenses, ["Apache 2.0"]},
-  {links, []}
- ]}.
+    {licenses, ["Apache 2.0"]},
+    {links, []}
+]}.
