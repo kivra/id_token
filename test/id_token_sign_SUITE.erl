@@ -13,28 +13,28 @@ groups() -> [].
 all() -> [start_without_config, start_with_key_in_config].
 
 init_per_suite(Config) ->
-  application:ensure_all_started(jose),
-  Config.
+    application:ensure_all_started(jose),
+    Config.
 end_per_suite(_Config) ->
-  ok.
+    ok.
 
 init_per_testcase(_TestCase, Config) ->
-  Config.
+    Config.
 end_per_testcase(_TestCase, Config) ->
-  Config.
+    Config.
 
 start_without_config(_Config) ->
-  {ok, _Pid} = id_token_sign:start_link(),
-  ?assertMatch({ok, []}, id_token_pubkeys_storage:get_all()),
-  ok = id_token_sign:stop().
+    {ok, _Pid} = id_token_sign:start_link(),
+    ?assertMatch({ok, []}, id_token_pubkeys_storage:get_all()),
+    ok = id_token_sign:stop().
 
 start_with_key_in_config(_Config) ->
-  application:set_env(id_token, sign_keys, [{<<"ES256">>, #{ttu => 1}}]),
-  {ok, _Pid} = id_token_sign:start_link(),
-  ?assertMatch({ok, [_]}, id_token_pubkeys_storage:get_all()),
-  timer:sleep(1000),
-  ?assertMatch({ok, [_, _]}, id_token_pubkeys_storage:get_all()),
-  ok = id_token_sign:stop().
+    application:set_env(id_token, sign_keys, [{<<"ES256">>, #{ttu => 1}}]),
+    {ok, _Pid} = id_token_sign:start_link(),
+    ?assertMatch({ok, [_]}, id_token_pubkeys_storage:get_all()),
+    timer:sleep(1000),
+    ?assertMatch({ok, [_, _]}, id_token_pubkeys_storage:get_all()),
+    ok = id_token_sign:stop().
 
 %%%_* Editor ===================================================================
 %%% Local Variables:

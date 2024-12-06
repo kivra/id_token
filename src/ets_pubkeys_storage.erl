@@ -15,27 +15,27 @@ start() -> gen_server:start({local, ?MODULE}, ?MODULE, [], []).
 stop() -> gen_server:stop(?MODULE).
 
 delete(Key) ->
-  ets:delete(?MODULE, Key),
-  ok.
+    ets:delete(?MODULE, Key),
+    ok.
 
 get(Kid) ->
-  case ets:lookup(?MODULE, Kid) of
-    [{Kid, Key}] -> {ok, Key};
-    [] -> {error, not_found}
-  end.
+    case ets:lookup(?MODULE, Kid) of
+        [{Kid, Key}] -> {ok, Key};
+        [] -> {error, not_found}
+    end.
 
 get_all() ->
-  Objects = ets:tab2list(?MODULE),
-  {ok, [K || {_, K} <- Objects]}.
+    Objects = ets:tab2list(?MODULE),
+    {ok, [K || {_, K} <- Objects]}.
 
 put(#{<<"kid">> := Kid} = Key) ->
-  ets:insert(?MODULE, {Kid, Key}),
-  ok.
+    ets:insert(?MODULE, {Kid, Key}),
+    ok.
 
 %% gen_server callbacks
 init(A) ->
-  ?MODULE = ets:new(?MODULE, ?ETS_OPTIONS),
-  {ok, A}.
+    ?MODULE = ets:new(?MODULE, ?ETS_OPTIONS),
+    {ok, A}.
 handle_call(_, _, S) -> {noreply, S}.
 handle_cast(_, S) -> {noreply, S}.
 
