@@ -17,14 +17,14 @@ jobs:
     name: OTP ${{matrix.otp}}
     strategy:
       matrix:
-        otp: ["24.0", "25.0"]
+        otp: ["26", "27"]
 
     steps:
-    - uses: actions/checkout@v2.0.0
-    - uses: erlef/setup-beam@v1.16.0
+    - uses: actions/checkout@722adc63f1aa60a57ec37892e133b1d319cae598 # v2.0.0
+    - uses: erlef/setup-beam@61e01a43a562a89bfc54c7f9a378ff67b03e4a21 # v1.16.0
       with:
         otp-version: ${{ matrix.otp }}
-        rebar3-version: '3.16.1'
+        rebar3-version: '3.24'
     - name: Compile
       run: make
     - name: Run xref
