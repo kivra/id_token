@@ -2,7 +2,6 @@
 name: ci
 permissions:
   contents: write
-  packages: write
 
 on:
   # for feature branches and releases
