@@ -30,6 +30,10 @@
       ],
       "depNameTemplate": "{{{org}}}/{{{depName}}}{{#if prefix}}/{{{replace '/v$' '' prefix}}}{{/if}}",
       "extractVersionTemplate": "^{{{prefix}}}(?<version>.*$)"
+    },
+    {
+      "matchPackageNames": "hackney",
+      "allowedVersions": "< 2.0.0"
     }
   ]
 }
