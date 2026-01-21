@@ -4,6 +4,12 @@
     "config:best-practices",
     ":disableDigestUpdates"
   ],
+  "packageRules": [
+    {
+      "matchPackageNames": "hackney",
+      "allowedVersions": "< 2.0.0"
+    }
+  ],
   "customManagers": [
     {
       "description": "Match Hex.pm-based dependencies in rebar.config",
@@ -30,10 +36,6 @@
       ],
       "depNameTemplate": "{{{org}}}/{{{depName}}}{{#if prefix}}/{{{replace '/v$' '' prefix}}}{{/if}}",
       "extractVersionTemplate": "^{{{prefix}}}(?<version>.*$)"
-    },
-    {
-      "matchPackageNames": "hackney",
-      "allowedVersions": "< 2.0.0"
     }
   ]
 }
