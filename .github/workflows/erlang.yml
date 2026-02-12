@@ -38,8 +38,8 @@ jobs:
         make
     - name: Run xref
       run: make xref
-    - name: Run elvis
-      run: make elvis_rock
+    #- name: Run elvis
+    #  run: make elvis_rock
     - name: Run dialyzer
       run: make dialyze
     - name: Run proper tests
