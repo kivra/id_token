@@ -67,13 +67,13 @@
       matchCurrentVersion: "/^v?0/",
       automerge: false,
     },
-  ],
-  packageRules: [
     {
-      matchPackageNames: "hackney",
+      matchPackageNames: ["hackney"],
       allowedVersions: "< 2.0.0",
-    }
+    },
   ],
+
+  // Non-standard managers
   customManagers: [
     {
       description: "Match Hex.pm-based dependencies in rebar.config",
