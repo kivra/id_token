@@ -1,11 +1,19 @@
 ---
-name: ci
+name: Continuous Integration
 permissions:
   contents: write
 
 on:
-  # for feature branches and releases
+  # for feature branches
+  pull_request:
+  # for releases
   push:
+    branches:
+      - master
+  # for merge queues
+  merge_group:
+    types:
+      - checks_requested
 
 concurrency:
   group: ${{ (github.ref != 'refs/heads/master') && format('{0}-{1}', github.ref, github.workflow) || github.run_id }}
@@ -13,6 +21,7 @@ concurrency:
 
 jobs:
   build_and_test:
+    if: github.ref != 'refs/heads/master'
 
     runs-on: ubuntu-24.04
 
@@ -25,6 +34,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
+        ref: ${{ github.head_ref || github.ref }}
         token: ${{secrets.GITHUB_TOKEN}}
     - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
       with:
@@ -49,9 +59,9 @@ jobs:
     # since the 'git push' prevents the workflow's status from being reported
     # In this case, we need to analyze the results of the previous
     # 'Run Erlang Tests' step, and, when Ok, force- merge it!
-    - if: matrix.otp == '27'
+    - if: matrix.otp == '27' && github.event_name == 'pull_request'
       run: |
-        if [[ "${REF}" =~ refs/heads/renovate/.* ]]; then
+        if [[ "${REF}" =~ ^renovate/.* ]]; then
           echo "ℹ️ This appears to come from a Renovate PR. Trying rebar.lock update..."
 
           ORIGIN="origin/${{ github.event.repository.default_branch }}"
@@ -66,12 +76,12 @@ jobs:
               git config user.email "bot@renovateapp.com"
               git add "${CHECK_FILE}"
               git commit -m "auto-update(deps): Changes in ${CHECK_FILE}"
-              git push origin HEAD:"${REF}"
+              git push origin HEAD:"refs/heads/${REF}"
             fi
           fi
         fi
       env:
-        REF: ${{ github.ref }}
+        REF: ${{ github.head_ref }}
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
   release:
