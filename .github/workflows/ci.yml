@@ -25,10 +25,7 @@ jobs:
 
     runs-on: ubuntu-24.04
 
-    name: OTP ${{matrix.otp}}
-    strategy:
-      matrix:
-        otp: ["26", "27"]
+    name: Erlang/OTP
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -38,7 +35,7 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha || github.ref }}
     - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
       with:
-        otp-version: ${{ matrix.otp }}
+        otp-version: "27"
         rebar3-version: '3.27'
     - name: Compile
       run: |
@@ -57,7 +54,7 @@ jobs:
     # since the 'git push' prevents the workflow's status from being reported
     # In this case, we need to analyze the results of the previous
     # 'Run Erlang Tests' step, and, when Ok, force- merge it!
-    - if: matrix.otp == '27' && github.event_name == 'pull_request'
+    - if: github.event_name == 'pull_request'
       run: |
         if [[ "${REF}" =~ ^renovate/.* ]]; then
           echo "ℹ️ This appears to come from a Renovate PR. Trying rebar.lock update..."
@@ -103,7 +100,7 @@ jobs:
 
     - name: Create a GitHub release
       if: steps.tag-version.outputs.new_tag != ''
-      run: gh release create "${NEW_TAG}" --generate-notes --latest
+      run: gh release create "${NEW_TAG}" --generate-notes --latest=false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         NEW_TAG: ${{ steps.tag-version.outputs.new_tag }}

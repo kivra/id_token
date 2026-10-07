@@ -15,7 +15,7 @@
 get_pub_keys(Uri) ->
     case hackney:request(get, Uri, [], <<>>, [with_body]) of
         {ok, 200, Headers, Body} ->
-            #{<<"keys">> := Keys} = jsx:decode(Body, [return_maps]),
+            #{<<"keys">> := Keys} = json:decode(Body),
             CacheControl = hackney_headers:parse(<<"Cache-Control">>, Headers),
             {match, [MaxAgeBin]} = re:run(
                 CacheControl,
@@ -38,7 +38,7 @@ get_pub_keys(Uri) ->
 get_jwks_uri(Uri) ->
     case hackney:request(get, Uri, [], <<>>, [with_body]) of
         {ok, 200, _Headers, Body} ->
-            #{<<"jwks_uri">> := JWKSUri} = jsx:decode(Body, [return_maps]),
+            #{<<"jwks_uri">> := JWKSUri} = json:decode(Body),
             {ok, JWKSUri};
         {ok, _, _, _} ->
             {error, service_unavailable};

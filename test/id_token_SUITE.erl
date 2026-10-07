@@ -82,11 +82,11 @@ mock_id_provider(PublicKeyMap, HttpReponseDelay) ->
         request,
         fun
             (get, ?WELL_KNOWN_URI, _, _, _) ->
-                Body = jsx:encode(#{<<"jwks_uri">> => ?JWKS_URI}),
+                Body = iolist_to_binary(json:encode(#{<<"jwks_uri">> => ?JWKS_URI})),
                 {ok, 200, [], Body};
             (get, ?JWKS_URI, _, _, _) ->
                 timer:sleep(HttpReponseDelay),
-                Body = jsx:encode(#{<<"keys">> => [PublicKeyMap]}),
+                Body = iolist_to_binary(json:encode(#{<<"keys">> => [PublicKeyMap]})),
                 MaxAge = <<"max-age=3600">>,
                 Headers = [{<<"Cache-Control">>, MaxAge}],
                 {ok, 200, Headers, Body}
