@@ -7,8 +7,7 @@
         kernel,
         stdlib,
         hackney,
-        jose,
-        jsx
+        jose
     ]},
     {env, []},
     {modules, []},
